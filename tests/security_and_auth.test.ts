@@ -9,6 +9,7 @@ import {
   SessionPayload,
   isAdminRole,
   requireAuth,
+  requirePageAuth,
 } from "@/lib/auth";
 
 describe("Security, Hashing & Session Authentication", () => {
@@ -91,5 +92,14 @@ describe("Security, Hashing & Session Authentication", () => {
 
   it("requireAuth throws UNAUTHORIZED when no session cookie exists", async () => {
     await expect(requireAuth()).rejects.toThrow(/UNAUTHORIZED/i);
+  });
+
+  it("requirePageAuth cleanly redirects to /admin/login when no session cookie exists", async () => {
+    try {
+      await requirePageAuth();
+      expect.fail("Expected requirePageAuth to redirect");
+    } catch (err: any) {
+      expect(err.message).toMatch(/NEXT_REDIRECT/i);
+    }
   });
 });

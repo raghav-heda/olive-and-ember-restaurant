@@ -1,4 +1,4 @@
-import { requireAuth, isAdminRole } from "@/lib/auth";
+import { requirePageAuth, isAdminRole } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { formatDateTime } from "@/lib/utils";
 import { History, ShieldCheck, User } from "lucide-react";
@@ -7,7 +7,7 @@ import { ForbiddenCard } from "@/components/admin/ForbiddenCard";
 export const revalidate = 0;
 
 export default async function AdminActivityLogsPage() {
-  const session = await requireAuth();
+  const session = await requirePageAuth();
 
   if (!isAdminRole(session.role)) {
     return <ForbiddenCard moduleName="Staff Activity & Security Audit Logs" />;

@@ -1,11 +1,11 @@
-import { requireAuth } from "@/lib/auth";
+import { requirePageAuth } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { OrdersManagerClient, AdminOrder } from "@/components/admin/OrdersManagerClient";
 
 export const revalidate = 0;
 
 export default async function AdminOrdersPage() {
-  const session = await requireAuth();
+  const session = await requirePageAuth();
 
   const rawOrders = await prisma.order.findMany({
     where: { restaurantId: session.restaurantId },

@@ -1,4 +1,4 @@
-import { requireAuth, isAdminRole } from "@/lib/auth";
+import { requirePageAuth, isAdminRole } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { formatCurrency } from "@/lib/utils";
 import {
@@ -15,7 +15,7 @@ import { ForbiddenCard } from "@/components/admin/ForbiddenCard";
 export const revalidate = 0;
 
 export default async function AdminAnalyticsPage() {
-  const session = await requireAuth();
+  const session = await requirePageAuth();
 
   if (!isAdminRole(session.role)) {
     return <ForbiddenCard moduleName="Financial Analytics & Revenue Reports" />;

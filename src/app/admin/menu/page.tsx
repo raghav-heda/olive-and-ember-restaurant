@@ -1,11 +1,11 @@
-import { requireAuth } from "@/lib/auth";
+import { requirePageAuth } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { MenuManagerClient, AdminMenuItem, AdminCategory } from "@/components/admin/MenuManagerClient";
 
 export const revalidate = 0;
 
 export default async function AdminMenuPage() {
-  const session = await requireAuth();
+  const session = await requirePageAuth();
 
   const categories = await prisma.menuCategory.findMany({
     where: { restaurantId: session.restaurantId },

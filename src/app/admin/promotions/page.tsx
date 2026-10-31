@@ -1,4 +1,4 @@
-import { requireAuth, isAdminRole } from "@/lib/auth";
+import { requirePageAuth, isAdminRole } from "@/lib/auth";
 import prisma from "@/lib/db";
 import {
   PromotionsManagerClient,
@@ -9,7 +9,7 @@ import { ForbiddenCard } from "@/components/admin/ForbiddenCard";
 export const revalidate = 0;
 
 export default async function AdminPromotionsPage() {
-  const session = await requireAuth();
+  const session = await requirePageAuth();
 
   if (!isAdminRole(session.role)) {
     return <ForbiddenCard moduleName="Promotions & Coupon Management" />;

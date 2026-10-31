@@ -111,11 +111,6 @@ export function Footer() {
                   Frequently Asked Questions
                 </Link>
               </li>
-              <li>
-                <Link href="/admin/login" className="hover:text-terracotta-400 text-xs text-ivory-400 transition-colors">
-                  Staff Management Portal →
-                </Link>
-              </li>
             </ul>
           </div>
 
@@ -167,11 +162,17 @@ export function Footer() {
         <div className="mt-12 pt-8 border-t border-charcoal-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-ivory-400">
           <p>© {new Date().getFullYear()} Olive &amp; Ember Kitchen. All rights reserved.</p>
           <div className="flex items-center gap-6 text-[11px]">
-            <Link href="/privacy" className="hover:text-ivory-200">
+            <Link href="/privacy" className="hover:text-ivory-200 transition-colors">
               Privacy Policy
             </Link>
-            <Link href="/terms" className="hover:text-ivory-200">
+            <Link href="/terms" className="hover:text-ivory-200 transition-colors">
               Terms &amp; Cancellation
+            </Link>
+            <Link
+              href="/admin/login"
+              className="text-ivory-400 hover:text-ivory-200 transition-colors"
+            >
+              Staff Portal
             </Link>
             <span>Currency: INR (₹)</span>
           </div>

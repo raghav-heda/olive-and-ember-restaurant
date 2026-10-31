@@ -1,4 +1,4 @@
-import { requireAuth } from "@/lib/auth";
+import { requirePageAuth } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
 import Link from "next/link";
@@ -17,7 +17,7 @@ import {
 export const revalidate = 0; // Dynamic server component
 
 export default async function AdminDashboardPage() {
-  const session = await requireAuth();
+  const session = await requirePageAuth();
 
   // Query real data from database
   const orders = await prisma.order.findMany({

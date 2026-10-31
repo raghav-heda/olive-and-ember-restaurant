@@ -1,4 +1,4 @@
-import { requireAuth } from "@/lib/auth";
+import { requirePageAuth } from "@/lib/auth";
 import prisma from "@/lib/db";
 import {
   ReservationsManagerClient,
@@ -8,7 +8,7 @@ import {
 export const revalidate = 0;
 
 export default async function AdminReservationsPage() {
-  const session = await requireAuth();
+  const session = await requirePageAuth();
 
   const rawRes = await prisma.reservation.findMany({
     where: { restaurantId: session.restaurantId },

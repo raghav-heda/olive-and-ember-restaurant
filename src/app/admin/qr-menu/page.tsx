@@ -1,4 +1,4 @@
-import { requireAuth } from "@/lib/auth";
+import { requirePageAuth } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { generateMenuQrCode } from "@/lib/qr";
 import { QrMenuClient } from "@/components/admin/QrMenuClient";
@@ -6,7 +6,7 @@ import { QrMenuClient } from "@/components/admin/QrMenuClient";
 export const revalidate = 0;
 
 export default async function AdminQrMenuPage() {
-  const session = await requireAuth();
+  const session = await requirePageAuth();
 
   const restaurant = await prisma.restaurant.findUnique({
     where: { id: session.restaurantId },

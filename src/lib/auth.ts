@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import prisma from "@/lib/db";
 
 const JWT_SECRET = process.env.JWT_SECRET || "olive_ember_fallback_development_secret_key_8491";
@@ -96,4 +97,19 @@ export async function requireAuth(
     role: user.role,
     restaurantId: user.restaurantId,
   };
+}
+
+/**
+ * Server component route protection helper.
+ * Validates session and automatically redirects unauthenticated or
+ * unauthorized visitors to /admin/login rather than throwing uncaught errors.
+ */
+export async function requirePageAuth(
+  allowedRoles: string[] = ["ADMIN", "OWNER", "STAFF"]
+): Promise<SessionPayload> {
+  try {
+    return await requireAuth(allowedRoles);
+  } catch {
+    redirect("/admin/login");
+  }
 }

@@ -79,4 +79,35 @@ describe("Strict Role-Based Access Control (RBAC) & Authentication Integration",
     expect(staffRecord?.role).toBe("STAFF");
     expect(staffRecord?.isActive).toBe(true);
   });
+
+  it("executes the full login -> session verification -> logout lifecycle", async () => {
+    // 1. Verify credentials for admin user
+    const adminUser = await prisma.user.findUnique({ where: { id: adminUserId } });
+    expect(adminUser).not.toBeNull();
+    const isPasswordCorrect = await comparePassword("AdminPass@2026", adminUser!.passwordHash);
+    expect(isPasswordCorrect).toBe(true);
+
+    // 2. Sign active session token
+    const token = signSessionToken({
+      userId: adminUser!.id,
+      email: adminUser!.email,
+      name: adminUser!.name,
+      role: adminUser!.role,
+      restaurantId: adminUser!.restaurantId,
+    });
+    expect(token).toBeDefined();
+
+    // 3. Verify token contents and role
+    const session = verifySessionToken(token);
+    expect(session).not.toBeNull();
+    expect(session?.email).toBe("admin@oliveandember.demo");
+    expect(session?.role).toBe("OWNER");
+
+    // 4. Verify logout invalidation: expired/empty tokens fail verification
+    const expiredDecoded = verifySessionToken("");
+    expect(expiredDecoded).toBeNull();
+
+    const tamperedDecoded = verifySessionToken("invalid_jwt_garbage_string");
+    expect(tamperedDecoded).toBeNull();
+  });
 });

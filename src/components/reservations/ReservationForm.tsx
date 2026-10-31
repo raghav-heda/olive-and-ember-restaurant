@@ -13,7 +13,29 @@ import {
   ArrowRight,
   PlusCircle,
   RotateCcw,
+  Check,
+  Sun,
+  Moon,
 } from "lucide-react";
+
+// Convert 24-hour time "19:30" to user-friendly 12-hour format "7:30 PM"
+function formatTo12Hour(time24: string): string {
+  if (!time24 || !time24.includes(":")) return time24;
+  const [hStr, mStr] = time24.split(":");
+  let h = parseInt(hStr, 10);
+  const m = mStr || "00";
+  const ampm = h >= 12 ? "PM" : "AM";
+  h = h % 12;
+  if (h === 0) h = 12;
+  return `${h}:${m} ${ampm}`;
+}
+
+const DEFAULT_LUNCH_SLOTS = DEFAULT_TIME_SLOTS.filter(
+  (slot) => parseInt(slot.split(":")[0], 10) < 16
+);
+const DEFAULT_DINNER_SLOTS = DEFAULT_TIME_SLOTS.filter(
+  (slot) => parseInt(slot.split(":")[0], 10) >= 16
+);
 
 // All 15-minute intervals within restaurant operating hours (12:00 to 22:30)
 const LUNCH_15_MIN_SLOTS = [
@@ -140,7 +162,7 @@ export function ReservationForm() {
           <div className="flex justify-between border-b border-ivory-200 pb-2">
             <span className="text-charcoal-700">Date &amp; Seating Time:</span>
             <span className="font-bold text-charcoal-900">
-              {successBooking.date} at {successBooking.time}
+              {successBooking.date} at {formatTo12Hour(successBooking.time)} ({successBooking.time})
             </span>
           </div>
           <div className="flex justify-between border-b border-ivory-200 pb-2">
@@ -280,174 +302,229 @@ export function ReservationForm() {
         </div>
       </div>
 
-      {/* Step 2: Time Slot Selection */}
-      <div className="space-y-4 border-t border-ivory-200 pt-6">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <h3 className="font-serif text-lg text-charcoal-900 flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-charcoal-900 text-ivory-50 text-xs flex items-center justify-center font-sans font-bold">
-              2
-            </span>
-            <span>Select Service Slot</span>
-          </h3>
+      {/* Step 2: Select Your Time */}
+      <div className="space-y-5 border-t border-ivory-200 pt-6">
+        {/* 1. Clear Section Header & Selected Time Feedback */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <h3 className="font-serif text-lg text-charcoal-900 flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-charcoal-900 text-ivory-50 text-xs flex items-center justify-center font-sans font-bold">
+                2
+              </span>
+              <span>Select Your Time</span>
+            </h3>
+            <p className="text-xs text-charcoal-600 mt-0.5 ml-8">
+              Choose an available time for your table.
+            </p>
+          </div>
 
-          {/* Toggle for Custom Time Picker */}
-          <button
-            type="button"
-            onClick={() => setIsCustomMode(!isCustomMode)}
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-terracotta-600 hover:text-terracotta-700 transition-colors bg-terracotta-50 hover:bg-terracotta-100 px-3 py-1.5 rounded-full border border-terracotta-200"
-          >
-            {isCustomMode ? (
-              <>
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Show standard slots</span>
-              </>
-            ) : (
-              <>
-                <PlusCircle className="w-3.5 h-3.5" />
-                <span>+ Choose a different time</span>
-              </>
-            )}
-          </button>
-        </div>
-
-        {/* Selected Time Badge */}
-        <div className="flex items-center gap-2 text-xs text-charcoal-800">
-          <Clock className="w-4 h-4 text-terracotta-600" />
-          <span>Selected Seating:</span>
-          <span className="font-mono font-bold text-charcoal-950 bg-ivory-200 px-2 py-0.5 rounded text-xs">
-            {timeSlot}
-          </span>
-          {isCustomSelected && (
-            <span className="text-[10px] uppercase font-bold text-terracotta-700 bg-terracotta-100 px-2 py-0.5 rounded-full">
-              Custom Time
-            </span>
+          {/* 4. Elegant Selected Time Confirmation Summary */}
+          {timeSlot && (
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-ivory-50 border border-ivory-300 shadow-sm text-xs self-start sm:self-auto ml-8 sm:ml-0">
+              <Clock className="w-3.5 h-3.5 text-terracotta-600 shrink-0" />
+              <div className="flex items-center gap-1.5">
+                <span className="text-charcoal-500 font-medium">Selected time:</span>
+                <span className="font-bold text-charcoal-950 font-sans">
+                  {formatTo12Hour(timeSlot)}
+                </span>
+                <span className="text-charcoal-400">—</span>
+                <span className="text-charcoal-700 font-medium">
+                  {parseInt(timeSlot.split(":")[0], 10) >= 16 ? "Dinner" : "Lunch"}
+                </span>
+                {isCustomSelected && (
+                  <span className="text-[10px] uppercase font-bold text-terracotta-700 bg-terracotta-100 px-1.5 py-0.5 rounded-full ml-0.5">
+                    Custom
+                  </span>
+                )}
+              </div>
+            </div>
           )}
         </div>
 
-        {/* Standard Predefined Time Slots Grid */}
+        {/* Standard Time Slots Divided by Service Shift (Lunch & Dinner) */}
         {!isCustomMode && (
-          <div>
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-2">
-              {DEFAULT_TIME_SLOTS.map((slot) => {
-                const isSelected = timeSlot === slot;
-                const isDinner = parseInt(slot.split(":")[0], 10) >= 18;
-                return (
-                  <button
-                    key={slot}
-                    type="button"
-                    onClick={() => handleSelectTime(slot)}
-                    className={`py-2 px-1 rounded-xl text-xs font-bold transition-all text-center border ${
-                      isSelected
-                        ? "bg-charcoal-900 text-ivory-50 border-charcoal-900 shadow-sm scale-105"
-                        : "bg-ivory-50 text-charcoal-800 border-ivory-300 hover:border-terracotta-400"
-                    }`}
-                  >
-                    <span>{slot}</span>
-                    <span className="block text-[9px] font-normal text-charcoal-700">
-                      {isDinner ? "Dinner" : "Lunch"}
-                    </span>
-                  </button>
-                );
-              })}
+          <div className="space-y-5">
+            {/* Lunch Service Group */}
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <Sun className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                  <span className="font-serif text-sm font-bold text-charcoal-900">
+                    Lunch
+                  </span>
+                  <span className="text-xs text-charcoal-500 font-normal">
+                    — Afternoon service (12:00 PM – 2:30 PM)
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5">
+                {DEFAULT_LUNCH_SLOTS.map((slot) => {
+                  const isSelected = timeSlot === slot;
+                  return (
+                    <button
+                      key={slot}
+                      type="button"
+                      onClick={() => handleSelectTime(slot)}
+                      className={`h-11 px-3 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 border ${
+                        isSelected
+                          ? "bg-charcoal-900 text-ivory-50 border-charcoal-900 shadow-md ring-1 ring-charcoal-900"
+                          : "bg-ivory-50 text-charcoal-800 border-ivory-300 hover:border-terracotta-400 hover:bg-white"
+                      }`}
+                    >
+                      {isSelected && (
+                        <Check className="w-3.5 h-3.5 text-terracotta-400 shrink-0 animate-in zoom-in-75 duration-150" />
+                      )}
+                      <span>{formatTo12Hour(slot)}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-            <div className="pt-2 text-right">
+
+            {/* Subtle Divider */}
+            <div className="border-t border-ivory-200/70" />
+
+            {/* Dinner Service Group */}
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <Moon className="w-3.5 h-3.5 text-terracotta-600 shrink-0" />
+                  <span className="font-serif text-sm font-bold text-charcoal-900">
+                    Dinner
+                  </span>
+                  <span className="text-xs text-charcoal-500 font-normal">
+                    — Evening service (6:30 PM – 10:00 PM)
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-8 gap-2.5">
+                {DEFAULT_DINNER_SLOTS.map((slot) => {
+                  const isSelected = timeSlot === slot;
+                  return (
+                    <button
+                      key={slot}
+                      type="button"
+                      onClick={() => handleSelectTime(slot)}
+                      className={`h-11 px-3 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 border ${
+                        isSelected
+                          ? "bg-charcoal-900 text-ivory-50 border-charcoal-900 shadow-md ring-1 ring-charcoal-900"
+                          : "bg-ivory-50 text-charcoal-800 border-ivory-300 hover:border-terracotta-400 hover:bg-white"
+                      }`}
+                    >
+                      {isSelected && (
+                        <Check className="w-3.5 h-3.5 text-terracotta-400 shrink-0 animate-in zoom-in-75 duration-150" />
+                      )}
+                      <span>{formatTo12Hour(slot)}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 5. Clean Secondary Action for Custom / Preferred Time */}
+            <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs border-t border-ivory-200/70">
+              <span className="text-charcoal-600 font-medium">
+                Can&apos;t find your preferred time?
+              </span>
               <button
                 type="button"
                 onClick={() => setIsCustomMode(true)}
-                className="text-xs text-terracotta-600 hover:underline font-semibold"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-terracotta-300 text-terracotta-700 bg-terracotta-50/60 hover:bg-terracotta-100/70 font-semibold text-xs transition-colors"
               >
-                Need a specific time like 12:15, 14:15, or 19:15? + Choose a different time
+                <PlusCircle className="w-3.5 h-3.5 text-terracotta-600" />
+                <span>Request a different time</span>
               </button>
             </div>
           </div>
         )}
 
-        {/* Custom 15-Minute Interval Time Picker */}
+        {/* Custom 15-Minute Seating Option */}
         {isCustomMode && (
-          <div className="bg-ivory-50 border border-ivory-300 rounded-2xl p-4 sm:p-5 space-y-4 animate-in fade-in-50 duration-200">
+          <div className="bg-ivory-50 border border-ivory-300 rounded-2xl p-4 sm:p-6 space-y-4 shadow-sm animate-in fade-in-50 duration-200">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-ivory-200 pb-3">
               <div>
-                <span className="font-bold text-xs text-charcoal-900 uppercase tracking-wider block">
-                  Select Custom 15-Minute Seating Time
+                <span className="font-serif text-sm font-bold text-charcoal-900 block">
+                  Request a Specific Seating Time
                 </span>
-                <span className="text-[11px] text-charcoal-600">
-                  Choose any 15-minute interval within daily operating hours (12:00 – 22:30).
+                <span className="text-xs text-charcoal-600">
+                  Select any 15-minute interval during our operating hours (12:00 PM – 10:30 PM).
                 </span>
               </div>
 
-              {/* Lunch / Dinner Tabs */}
-              <div className="flex items-center gap-1 bg-ivory-200 p-1 rounded-xl">
+              {/* Lunch / Dinner Shift Selector */}
+              <div className="flex items-center gap-1 bg-ivory-200/70 p-1 rounded-xl">
                 <button
                   type="button"
                   onClick={() => setCustomShift("LUNCH")}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
                     customShift === "LUNCH"
                       ? "bg-charcoal-900 text-ivory-50 shadow-sm"
                       : "text-charcoal-700 hover:text-charcoal-950"
                   }`}
                 >
-                  Lunch (12:00 – 15:00)
+                  Lunch (12:00 – 2:45 PM)
                 </button>
                 <button
                   type="button"
                   onClick={() => setCustomShift("DINNER")}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
                     customShift === "DINNER"
                       ? "bg-charcoal-900 text-ivory-50 shadow-sm"
                       : "text-charcoal-700 hover:text-charcoal-950"
                   }`}
                 >
-                  Dinner (18:00 – 22:30)
+                  Dinner (6:00 – 10:30 PM)
                 </button>
               </div>
             </div>
 
-            {/* 15-Minute Slots Grid */}
+            {/* 15-Minute Interval Buttons */}
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
               {(customShift === "LUNCH" ? LUNCH_15_MIN_SLOTS : DINNER_15_MIN_SLOTS).map((slot) => {
                 const isSelected = timeSlot === slot;
-                const isStandard = DEFAULT_TIME_SLOTS.includes(slot);
                 return (
                   <button
                     key={slot}
                     type="button"
                     onClick={() => handleSelectTime(slot)}
-                    className={`py-2 px-2 rounded-xl text-xs font-bold font-mono transition-all text-center border ${
+                    className={`h-10 px-2 rounded-xl text-xs font-medium transition-all flex items-center justify-center gap-1 border ${
                       isSelected
-                        ? "bg-terracotta-600 text-ivory-50 border-terracotta-600 shadow-md scale-105"
-                        : "bg-ivory-100 text-charcoal-800 border-ivory-300 hover:border-terracotta-400"
+                        ? "bg-charcoal-900 text-ivory-50 border-charcoal-900 shadow-md ring-1 ring-charcoal-900"
+                        : "bg-ivory-100 text-charcoal-800 border-ivory-300 hover:border-terracotta-400 hover:bg-white"
                     }`}
                   >
-                    <span>{slot}</span>
-                    {!isStandard && (
-                      <span className="block text-[8px] font-sans font-normal text-terracotta-800">
-                        Custom
-                      </span>
+                    {isSelected && (
+                      <Check className="w-3 h-3 text-terracotta-400 shrink-0" />
                     )}
+                    <span>{formatTo12Hour(slot)}</span>
                   </button>
                 );
               })}
             </div>
 
-            {/* Direct Custom Time Input */}
-            <div className="pt-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs border-t border-ivory-200">
-              <span className="text-charcoal-700">Or type any 15-minute time directly:</span>
+            {/* Direct Input & Return Button */}
+            <div className="pt-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs border-t border-ivory-200">
               <div className="flex items-center gap-2">
+                <span className="text-charcoal-700 font-medium">Or type exact time:</span>
                 <input
                   type="time"
                   step="900"
                   value={timeSlot}
                   onChange={(e) => handleSelectTime(e.target.value)}
-                  className="bg-ivory-100 border border-ivory-300 rounded-lg px-3 py-1 text-xs font-mono font-bold text-charcoal-900 focus:outline-none focus:border-terracotta-500"
+                  className="bg-white border border-ivory-300 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-charcoal-900 focus:outline-none focus:border-terracotta-500 shadow-sm"
                 />
-                <button
-                  type="button"
-                  onClick={() => setIsCustomMode(false)}
-                  className="text-xs text-charcoal-600 hover:text-charcoal-900 underline"
-                >
-                  Reset to standard slots
-                </button>
               </div>
+
+              <button
+                type="button"
+                onClick={() => setIsCustomMode(false)}
+                className="inline-flex items-center gap-1.5 text-xs text-charcoal-700 hover:text-charcoal-950 font-semibold underline"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Return to standard slots</span>
+              </button>
             </div>
           </div>
         )}
@@ -530,7 +607,7 @@ export function ReservationForm() {
             <span>Verifying Table Capacity &amp; Booking...</span>
           ) : (
             <>
-              <span>Request Table Reservation for {timeSlot}</span>
+              <span>Request Table Reservation for {formatTo12Hour(timeSlot)}</span>
               <ArrowRight className="w-4 h-4" />
             </>
           )}

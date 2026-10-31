@@ -1,6 +1,7 @@
 import { requirePageAuth } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { generateMenuQrCode } from "@/lib/qr";
+import { resolveAppBaseUrl } from "@/lib/app-url";
 import { QrMenuClient } from "@/components/admin/QrMenuClient";
 
 export const revalidate = 0;
@@ -12,7 +13,7 @@ export default async function AdminQrMenuPage() {
     where: { id: session.restaurantId },
   });
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const baseUrl = resolveAppBaseUrl();
   const { dataUrl, targetUrl } = await generateMenuQrCode({
     baseUrl,
   });

@@ -126,6 +126,14 @@ export default async function AdminLayout({
               <span>Table QR Menus</span>
             </Link>
 
+            <Link
+              href="/admin/activity-logs"
+              className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl hover:bg-charcoal-800 text-ivory-200 hover:text-ivory-50 transition-colors"
+            >
+              <History className="w-4 h-4 text-terracotta-400" />
+              <span>Staff Activity Logs</span>
+            </Link>
+
             {/* Administrator Only Modules */}
             {isAdmin && (
               <>
@@ -155,14 +163,6 @@ export default async function AdminLayout({
                 >
                   <Sliders className="w-4 h-4 text-terracotta-400" />
                   <span>Restaurant Settings</span>
-                </Link>
-
-                <Link
-                  href="/admin/activity-logs"
-                  className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl hover:bg-charcoal-800 text-ivory-200 hover:text-ivory-50 transition-colors"
-                >
-                  <History className="w-4 h-4 text-terracotta-400" />
-                  <span>Staff Activity Logs</span>
                 </Link>
               </>
             )}

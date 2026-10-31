@@ -55,6 +55,27 @@ export async function POST(req: Request) {
       path: "/",
     });
 
+    // Record Staff Authentication Activity Log
+    try {
+      await prisma.activityLog.create({
+        data: {
+          restaurantId: user.restaurantId,
+          userId: user.id,
+          userName: user.name,
+          action: "AUTH_LOGIN",
+          entityType: "UserSession",
+          entityId: user.id,
+          detailsJson: JSON.stringify({
+            email: user.email,
+            role: user.role,
+            timestamp: new Date().toISOString(),
+          }),
+        },
+      });
+    } catch (logErr) {
+      console.error("Failed to write login activity log:", logErr);
+    }
+
     return NextResponse.json({
       success: true,
       user: {

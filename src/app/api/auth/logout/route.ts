@@ -1,9 +1,38 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { getCurrentSession } from "@/lib/auth";
+import prisma from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
+async function logLogoutActivity() {
+  try {
+    const session = await getCurrentSession();
+    if (session) {
+      await prisma.activityLog.create({
+        data: {
+          restaurantId: session.restaurantId,
+          userId: session.userId,
+          userName: session.name,
+          action: "AUTH_LOGOUT",
+          entityType: "UserSession",
+          entityId: session.userId,
+          detailsJson: JSON.stringify({
+            email: session.email,
+            role: session.role,
+            timestamp: new Date().toISOString(),
+          }),
+        },
+      });
+    }
+  } catch (err) {
+    console.error("Failed to write logout activity log:", err);
+  }
+}
+
 export async function POST(req: Request) {
+  await logLogoutActivity();
+
   const cookieStore = cookies();
   cookieStore.set("oe_session", "", {
     httpOnly: true,
@@ -21,6 +50,8 @@ export async function POST(req: Request) {
 }
 
 export async function GET(req: Request) {
+  await logLogoutActivity();
+
   const cookieStore = cookies();
   cookieStore.set("oe_session", "", {
     httpOnly: true,

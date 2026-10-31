@@ -1,24 +1,49 @@
 import QRCode from "qrcode";
+import { resolveAppBaseUrl } from "./app-url";
 
 export interface GenerateQrParams {
-  baseUrl: string;
+  baseUrl?: string;
   tableNumber?: string | number;
   utmSource?: string;
+  clientOrigin?: string;
+  req?: Request;
+}
+
+/**
+ * Builds the canonical menu target URL according to production requirements:
+ * - If no table identifier is entered: /menu?src=table_qr
+ * - If a table identifier is entered: /menu?src=table_qr&table=4
+ */
+export function buildMenuTargetUrl(params: {
+  baseUrl?: string;
+  tableNumber?: string | number;
+  utmSource?: string;
+  clientOrigin?: string;
+  req?: Request;
+}): string {
+  const { baseUrl, tableNumber, utmSource = "table_qr", clientOrigin, req } = params;
+  const resolvedBase = baseUrl || resolveAppBaseUrl({ clientOrigin, req });
+
+  const normalizedBase =
+    resolvedBase.startsWith("http://") || resolvedBase.startsWith("https://")
+      ? resolvedBase
+      : `https://${resolvedBase}`;
+
+  const url = new URL("/menu", normalizedBase);
+  url.searchParams.set("src", utmSource);
+
+  if (tableNumber !== undefined && tableNumber !== null && String(tableNumber).trim() !== "") {
+    url.searchParams.set("table", String(tableNumber).trim());
+  }
+
+  return url.toString();
 }
 
 export async function generateMenuQrCode(params: GenerateQrParams): Promise<{
   dataUrl: string;
   targetUrl: string;
 }> {
-  const { baseUrl, tableNumber, utmSource = "table_qr" } = params;
-
-  const url = new URL("/menu", baseUrl);
-  if (tableNumber) {
-    url.searchParams.set("table", String(tableNumber));
-  }
-  url.searchParams.set("src", utmSource);
-
-  const targetUrl = url.toString();
+  const targetUrl = buildMenuTargetUrl(params);
 
   const dataUrl = await QRCode.toDataURL(targetUrl, {
     width: 600,

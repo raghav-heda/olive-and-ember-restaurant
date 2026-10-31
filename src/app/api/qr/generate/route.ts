@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { generateMenuQrCode } from "@/lib/qr";
+import { resolveAppBaseUrl } from "@/lib/app-url";
 
 export const dynamic = "force-dynamic";
 
@@ -7,7 +8,12 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const tableNumber = searchParams.get("table") || undefined;
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const originParam = searchParams.get("origin") || undefined;
+
+    const baseUrl = resolveAppBaseUrl({
+      req,
+      clientOrigin: originParam,
+    });
 
     const { dataUrl, targetUrl } = await generateMenuQrCode({
       baseUrl,
@@ -17,7 +23,8 @@ export async function GET(req: Request) {
     return NextResponse.json({
       dataUrl,
       targetUrl,
-      tableNumber,
+      tableNumber: tableNumber || null,
+      baseUrl,
     });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });

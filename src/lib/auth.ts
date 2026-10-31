@@ -15,7 +15,7 @@ export interface SessionPayload {
   restaurantId: string;
 }
 
-export function isAdminRole(role: string): boolean {
+export function isAdminRole(role?: string | null): boolean {
   return role === "ADMIN" || role === "OWNER";
 }
 

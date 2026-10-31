@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { Download, Printer, QrCode, Sparkles, Flame, Check } from "lucide-react";
+import { Download, Printer, QrCode, Flame, Check, ExternalLink } from "lucide-react";
 
 export function QrMenuClient({
   restaurantName,
@@ -17,23 +17,44 @@ export function QrMenuClient({
   const [qrDataUrl, setQrDataUrl] = useState(initialQrDataUrl);
   const [targetUrl, setTargetUrl] = useState(initialTargetUrl);
   const [loading, setLoading] = useState(false);
+  const [downloadSuccess, setDownloadSuccess] = useState(false);
 
-  const fetchQr = async (tbl: string) => {
+  const fetchQr = async (tbl: string, originOverride?: string) => {
     setLoading(true);
     try {
-      const url = tbl ? `/api/qr/generate?table=${encodeURIComponent(tbl)}` : `/api/qr/generate`;
-      const res = await fetch(url);
+      const origin = originOverride || (typeof window !== "undefined" ? window.location.origin : "");
+      const params = new URLSearchParams();
+      if (tbl) params.set("table", tbl);
+      if (origin) params.set("origin", origin);
+
+      const query = params.toString() ? `?${params.toString()}` : "";
+      const res = await fetch(`/api/qr/generate${query}`);
       const data = await res.json();
       if (data.dataUrl) {
         setQrDataUrl(data.dataUrl);
         setTargetUrl(data.targetUrl);
       }
-    } catch {
-      // ignore
+    } catch (err) {
+      console.error("Failed to fetch dynamic QR:", err);
     } finally {
       setLoading(false);
     }
   };
+
+  // Ensure target URL matches actual browser host on mount (e.g. if SSR rendered with default host)
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.location.origin) {
+      try {
+        const initialUrl = new URL(initialTargetUrl);
+        if (initialUrl.origin !== window.location.origin) {
+          fetchQr(tableNumber, window.location.origin);
+        }
+      } catch {
+        fetchQr(tableNumber, window.location.origin);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleTableChange = (val: string) => {
     setTableNumber(val);
@@ -41,12 +62,19 @@ export function QrMenuClient({
   };
 
   const handleDownload = () => {
+    if (!qrDataUrl) return;
     const a = document.createElement("a");
     a.href = qrDataUrl;
-    a.download = tableNumber
-      ? `olive-ember-qr-table-${tableNumber}.png`
+    const cleanTable = tableNumber.trim().replace(/[^a-zA-Z0-9-_]/g, "_");
+    a.download = cleanTable
+      ? `olive-ember-qr-table-${cleanTable}.png`
       : `olive-ember-menu-qr.png`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
+
+    setDownloadSuccess(true);
+    setTimeout(() => setDownloadSuccess(false), 3000);
   };
 
   const handlePrint = () => {
@@ -56,7 +84,7 @@ export function QrMenuClient({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
       {/* Left Column: QR Configuration & Controls */}
-      <div className="lg:col-span-5 space-y-6">
+      <div className="lg:col-span-5 space-y-6 print:hidden">
         <div className="bg-charcoal-900 border border-charcoal-800 rounded-3xl p-6 sm:p-8 space-y-5 text-xs text-ivory-300">
           <div className="flex items-center gap-2">
             <QrCode className="w-5 h-5 text-terracotta-400" />
@@ -75,32 +103,62 @@ export function QrMenuClient({
               type="text"
               value={tableNumber}
               onChange={(e) => handleTableChange(e.target.value)}
-              placeholder="e.g. 1, 4, Patio 2, Booth 6 (Leave blank for general menu)"
-              className="w-full bg-charcoal-950 border border-charcoal-700 rounded-xl px-3.5 py-2.5 text-xs text-ivory-100 focus:outline-none focus:border-terracotta-500"
+              placeholder="e.g. 4, Patio 2, Booth 6 (Leave blank for general menu)"
+              className="w-full bg-charcoal-950 border border-charcoal-700 rounded-xl px-3.5 py-2.5 text-xs text-ivory-100 focus:outline-none focus:border-terracotta-500 font-medium placeholder-charcoal-500"
             />
+            <p className="text-[11px] text-ivory-500">
+              {tableNumber.trim()
+                ? `QR code will bind orders specifically to Table ${tableNumber.trim()}`
+                : "No table specified: QR code will open the general digital menu"}
+            </p>
           </div>
 
           {/* Target URL Preview */}
-          <div className="p-3.5 bg-charcoal-950 border border-charcoal-800 rounded-xl space-y-1">
-            <span className="text-[10px] uppercase tracking-wider text-ivory-500 block">
-              Destination URL
-            </span>
+          <div className="p-3.5 bg-charcoal-950 border border-charcoal-800 rounded-xl space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] uppercase tracking-wider text-ivory-400 font-mono font-bold block">
+                Destination URL
+              </span>
+              {loading && (
+                <span className="text-[10px] text-terracotta-400 animate-pulse font-mono">
+                  Updating...
+                </span>
+              )}
+            </div>
             <span className="font-mono text-[11px] text-terracotta-400 break-all block">
               {targetUrl}
             </span>
+            <a
+              href={targetUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-[11px] text-ivory-400 hover:text-ivory-200 transition-colors pt-1"
+            >
+              <span>Test link in new tab</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <button
               onClick={handleDownload}
-              className="flex-1 py-3 px-4 rounded-xl bg-charcoal-800 hover:bg-charcoal-700 text-ivory-100 font-bold uppercase tracking-wider text-[11px] flex items-center justify-center gap-2 transition-colors border border-charcoal-700"
+              className="flex-1 py-3 px-4 rounded-xl bg-charcoal-800 hover:bg-charcoal-700 text-ivory-100 font-bold uppercase tracking-wider text-[11px] flex items-center justify-center gap-2 transition-colors border border-charcoal-700 active:scale-[0.98]"
             >
-              <Download className="w-4 h-4 text-terracotta-400" />
-              <span>Download PNG</span>
+              {downloadSuccess ? (
+                <>
+                  <Check className="w-4 h-4 text-emerald-400" />
+                  <span className="text-emerald-400">Downloaded!</span>
+                </>
+              ) : (
+                <>
+                  <Download className="w-4 h-4 text-terracotta-400" />
+                  <span>Download PNG</span>
+                </>
+              )}
             </button>
             <button
               onClick={handlePrint}
-              className="flex-1 py-3 px-4 rounded-xl bg-terracotta-600 hover:bg-terracotta-500 text-ivory-50 font-bold uppercase tracking-wider text-[11px] flex items-center justify-center gap-2 transition-colors shadow"
+              className="flex-1 py-3 px-4 rounded-xl bg-terracotta-600 hover:bg-terracotta-500 text-ivory-50 font-bold uppercase tracking-wider text-[11px] flex items-center justify-center gap-2 transition-colors shadow active:scale-[0.98]"
             >
               <Printer className="w-4 h-4" />
               <span>Print Table Tent</span>
@@ -122,7 +180,7 @@ export function QrMenuClient({
       </div>
 
       {/* Right Column: Printable Table Tent Card Mockup */}
-      <div className="lg:col-span-7 flex justify-center">
+      <div className="lg:col-span-7 flex justify-center w-full">
         <div
           id="printable-table-tent"
           className="bg-ivory-100 border-2 border-ivory-300 rounded-3xl p-8 sm:p-12 text-center max-w-sm w-full space-y-6 shadow-2xl text-charcoal-900"

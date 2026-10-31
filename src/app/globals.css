@@ -42,3 +42,37 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #a84c30;
 }
+
+/* Print styles for QR Table Tents */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #111827 !important;
+  }
+
+  /* Hide admin navigation, sidebar, headers, and interactive buttons */
+  header,
+  footer,
+  aside,
+  nav,
+  button,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Center the printable table tent card */
+  #printable-table-tent {
+    box-shadow: none !important;
+    border: 2px solid #e5e7eb !important;
+    margin: 2rem auto !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+    max-width: 360px !important;
+    background: #ffffff !important;
+  }
+
+  @page {
+    margin: 1.5cm;
+    size: auto;
+  }
+}

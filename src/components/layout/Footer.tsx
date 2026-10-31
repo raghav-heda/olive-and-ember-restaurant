@@ -170,7 +170,7 @@ export function Footer() {
             </Link>
             <Link
               href="/admin/login"
-              className="text-ivory-400 hover:text-ivory-200 transition-colors"
+              className="text-ivory-300 hover:text-terracotta-400 transition-colors font-medium"
             >
               Staff Portal
             </Link>

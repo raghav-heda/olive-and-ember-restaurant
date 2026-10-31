@@ -31,6 +31,7 @@ prisma/*.db-journal
 
 # Ensure production schemas and migrations are tracked
 !prisma/schema.prisma
+!prisma/schema.sqlite.prisma
 !prisma/schema.postgresql.prisma
 !prisma/migrations/**
 

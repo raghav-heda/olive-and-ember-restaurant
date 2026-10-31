@@ -7,6 +7,8 @@ import {
 } from "@/lib/availability";
 import { sendReservationNotification } from "@/lib/notifications";
 
+export const dynamic = "force-dynamic";
+
 const reservationSchema = z.object({
   customerName: z.string().min(2, "Name must be at least 2 characters").max(80),
   customerPhone: z.string().min(8, "Valid phone number is required").max(20),

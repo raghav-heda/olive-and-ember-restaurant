@@ -3,6 +3,8 @@ import { z } from "zod";
 import prisma from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 const settingsSchema = z.object({
   restaurantName: z.string().min(2),
   phone: z.string().min(6),

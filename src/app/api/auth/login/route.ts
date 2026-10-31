@@ -4,6 +4,8 @@ import { z } from "zod";
 import prisma from "@/lib/db";
 import { comparePassword, signSessionToken } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),

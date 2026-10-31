@@ -3,6 +3,8 @@ import { z } from "zod";
 import prisma from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 const couponSchema = z.object({
   code: z.string().min(3).max(20),
   description: z.string().min(5).max(120),

@@ -4,6 +4,8 @@ import prisma from "@/lib/db";
 import { requireAuth, isAdminRole } from "@/lib/auth";
 import { sendOrderNotification } from "@/lib/notifications";
 
+export const dynamic = "force-dynamic";
+
 const updateSchema = z.object({
   orderId: z.string().min(1),
   status: z.enum([

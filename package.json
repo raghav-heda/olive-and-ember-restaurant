@@ -3,15 +3,19 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "node ./scripts/prepare-db.mjs local && next dev",
+    "build": "node ./scripts/prepare-db.mjs && next build",
+    "postinstall": "node ./scripts/prepare-db.mjs",
     "start": "next start",
     "lint": "next lint",
-    "db:push": "prisma db push",
+    "db:push": "prisma db push --schema=prisma/schema.sqlite.prisma",
+    "db:push:prod": "prisma db push --schema=prisma/schema.postgresql.prisma",
     "db:seed": "node seed.mjs",
-    "db:generate": "prisma generate",
+    "db:generate": "node ./scripts/prepare-db.mjs",
+    "db:generate:sqlite": "node ./scripts/prepare-db.mjs local",
+    "db:generate:postgres": "node ./scripts/prepare-db.mjs postgres",
     "db:studio": "prisma studio --schema=prisma/schema.prisma",
-    "test": "vitest run"
+    "test": "node ./scripts/prepare-db.mjs local && vitest run"
   },
   "dependencies": {
     "@prisma/client": "^5.21.1",

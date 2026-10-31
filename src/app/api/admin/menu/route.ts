@@ -3,6 +3,8 @@ import { z } from "zod";
 import prisma from "@/lib/db";
 import { requireAuth, isAdminRole } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 const menuItemSchema = z.object({
   id: z.string().optional(),
   categoryId: z.string().min(1, "Category is required"),

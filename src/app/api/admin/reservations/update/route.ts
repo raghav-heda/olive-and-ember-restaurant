@@ -4,6 +4,8 @@ import prisma from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
 import { sendReservationNotification } from "@/lib/notifications";
 
+export const dynamic = "force-dynamic";
+
 const updateReservationSchema = z.object({
   reservationId: z.string().min(1),
   status: z.enum([

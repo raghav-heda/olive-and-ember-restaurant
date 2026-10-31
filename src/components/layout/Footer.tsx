@@ -61,8 +61,11 @@ export function Footer() {
                 <div>
                   <p className="font-medium text-ivory-100">Lunch Service:</p>
                   <p className="text-xs text-ivory-400">Daily: 12:00 PM – 3:30 PM</p>
-                  <p className="font-medium text-ivory-100 mt-1">Dinner Hearth:</p>
-                  <p className="text-xs text-ivory-400">Mon–Sun: 6:30 PM – 11:30 PM</p>
+                  <p className="font-medium text-ivory-100 mt-1.5">Dinner Hearth:</p>
+                  <p className="text-xs text-ivory-400">Mon–Thu: 6:30 PM – 11:00 PM</p>
+                  <p className="text-xs text-ivory-400">Fri–Sat: 6:30 PM – 11:45 PM</p>
+                  <p className="font-medium text-ivory-100 mt-1.5">Sunday Hearth:</p>
+                  <p className="text-xs text-ivory-400">12:00 PM – 10:30 PM (All-Day)</p>
                 </div>
               </div>
               <div className="flex items-start gap-2.5 pt-2">

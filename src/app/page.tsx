@@ -539,9 +539,9 @@ export default async function HomePage() {
                 <Clock className="w-6 h-6" />
               </div>
               <div>
-                <h4 className="font-serif text-base text-ivory-50">Daily Table Service</h4>
+                <h4 className="font-serif text-base text-ivory-50">Dining Service Hours</h4>
                 <p className="text-xs text-ivory-400 mt-0.5">
-                  12:00 PM – 3:30 PM | 6:30 PM – 11:30 PM
+                  Lunch: 12:00 PM – 3:30 PM | Dinner: 6:30 PM – 11:00 PM (Fri–Sat till 11:45 PM)
                 </p>
               </div>
             </div>

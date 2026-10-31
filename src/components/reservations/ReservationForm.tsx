@@ -353,7 +353,7 @@ export function ReservationForm() {
                     Lunch
                   </span>
                   <span className="text-xs text-charcoal-500 font-normal">
-                    — Afternoon service (12:00 PM – 2:30 PM)
+                    — Afternoon service (12:00 PM – 3:30 PM)
                   </span>
                 </div>
               </div>
@@ -394,7 +394,7 @@ export function ReservationForm() {
                     Dinner
                   </span>
                   <span className="text-xs text-charcoal-500 font-normal">
-                    — Evening service (6:30 PM – 10:00 PM)
+                    — Evening service (6:30 PM – 11:00 PM, till 11:45 PM Fri–Sat)
                   </span>
                 </div>
               </div>

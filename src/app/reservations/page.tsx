@@ -38,9 +38,25 @@ export default function ReservationsPage() {
             <div className="bg-ivory-100 border border-ivory-300 rounded-3xl p-6 space-y-4 shadow-sm text-xs">
               <h3 className="font-serif text-base font-bold text-charcoal-900 flex items-center gap-2">
                 <Clock className="w-4 h-4 text-terracotta-600" />
-                <span>Dining Service &amp; Policies</span>
+                <span>Service Hours &amp; Policies</span>
               </h3>
-              <ul className="space-y-2.5 text-charcoal-700 leading-relaxed">
+
+              <div className="p-3 bg-ivory-50/90 rounded-2xl border border-ivory-200/80 space-y-1.5 text-[11px] text-charcoal-800">
+                <div className="flex justify-between">
+                  <span className="font-semibold text-charcoal-900">Mon &ndash; Thu:</span>
+                  <span>12:00 &ndash; 3:30 PM | 6:30 &ndash; 11:00 PM</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-semibold text-charcoal-900">Fri &ndash; Sat:</span>
+                  <span>12:00 &ndash; 3:30 PM | 6:30 &ndash; 11:45 PM</span>
+                </div>
+                <div className="flex justify-between text-terracotta-700 font-medium">
+                  <span>Sunday Hearth:</span>
+                  <span>12:00 PM &ndash; 10:30 PM (All-Day)</span>
+                </div>
+              </div>
+
+              <ul className="space-y-2.5 text-charcoal-700 leading-relaxed pt-1">
                 <li className="flex items-start gap-2">
                   <span className="text-terracotta-600 font-bold">•</span>
                   <span><strong>Table Holding Window:</strong> Tables are held for 15 minutes past your reserved seating time before release.</span>

@@ -105,30 +105,102 @@ export default function ContactPage() {
             </div>
 
             {/* Hours Breakdown */}
-            <div className="bg-ivory-100 border border-ivory-300 rounded-3xl p-8 space-y-4 shadow-sm text-xs">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-charcoal-900 text-terracotta-400 flex items-center justify-center shrink-0">
-                  <Clock className="w-5 h-5" />
+            <div className="bg-ivory-100 border border-ivory-300 rounded-3xl p-7 sm:p-8 space-y-5 shadow-sm text-xs">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-charcoal-900 text-terracotta-400 flex items-center justify-center shrink-0">
+                    <Clock className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-serif text-lg font-bold text-charcoal-900">Service Hours</h3>
+                    <p className="text-charcoal-600 text-[11px]">Lunch, Dinner &amp; Weekend Service</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-serif text-lg font-bold text-charcoal-900">Service Hours</h3>
-                  <p className="text-charcoal-700 text-[11px]">Lunch &amp; Hearth Evenings</p>
+                <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-olive-100 text-olive-800 text-[10px] font-bold tracking-wider uppercase">
+                  <span className="w-1.5 h-1.5 rounded-full bg-olive-600 animate-pulse" />
+                  Kitchen Active
+                </span>
+              </div>
+
+              <div className="space-y-3.5 pt-1">
+                {/* Monday - Thursday */}
+                <div className="p-3.5 bg-ivory-50/80 rounded-2xl border border-ivory-200/80 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-serif font-bold text-sm text-charcoal-900">
+                      Monday &ndash; Thursday
+                    </span>
+                    <span className="text-[10px] text-charcoal-500 font-medium uppercase tracking-wider">
+                      Weekday Cadence
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    <div className="flex items-center justify-between sm:justify-start gap-2 text-charcoal-700">
+                      <span className="px-2 py-0.5 rounded bg-amber-100/70 text-amber-800 text-[10px] font-bold uppercase tracking-wider">
+                        Lunch
+                      </span>
+                      <span className="font-medium text-charcoal-900">12:00 PM &ndash; 3:30 PM</span>
+                    </div>
+                    <div className="flex items-center justify-between sm:justify-start gap-2 text-charcoal-700">
+                      <span className="px-2 py-0.5 rounded bg-terracotta-100/70 text-terracotta-800 text-[10px] font-bold uppercase tracking-wider">
+                        Dinner
+                      </span>
+                      <span className="font-medium text-charcoal-900">6:30 PM &ndash; 11:00 PM</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Friday & Saturday */}
+                <div className="p-3.5 bg-ivory-50/80 rounded-2xl border border-ivory-200/80 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-serif font-bold text-sm text-charcoal-900">
+                      Friday &amp; Saturday
+                    </span>
+                    <span className="text-[10px] text-terracotta-700 font-bold uppercase tracking-wider">
+                      Extended Hearth
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    <div className="flex items-center justify-between sm:justify-start gap-2 text-charcoal-700">
+                      <span className="px-2 py-0.5 rounded bg-amber-100/70 text-amber-800 text-[10px] font-bold uppercase tracking-wider">
+                        Lunch
+                      </span>
+                      <span className="font-medium text-charcoal-900">12:00 PM &ndash; 3:30 PM</span>
+                    </div>
+                    <div className="flex items-center justify-between sm:justify-start gap-2 text-charcoal-700">
+                      <span className="px-2 py-0.5 rounded bg-terracotta-100/70 text-terracotta-800 text-[10px] font-bold uppercase tracking-wider">
+                        Dinner
+                      </span>
+                      <span className="font-medium text-charcoal-900">6:30 PM &ndash; 11:45 PM</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sunday */}
+                <div className="p-3.5 bg-ivory-50/80 rounded-2xl border border-ivory-200/80 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-serif font-bold text-sm text-charcoal-900">
+                      Sunday Hearth
+                    </span>
+                    <span className="text-[10px] text-olive-700 font-bold uppercase tracking-wider">
+                      Continuous Service
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-charcoal-700">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded bg-olive-100/80 text-olive-800 text-[10px] font-bold uppercase tracking-wider">
+                        All-Day
+                      </span>
+                      <span className="font-medium text-charcoal-900">12:00 PM &ndash; 10:30 PM</span>
+                    </div>
+                    <span className="text-[11px] text-charcoal-500 hidden sm:inline">No afternoon reset closure</span>
+                  </div>
                 </div>
               </div>
 
-              <div className="space-y-2 text-charcoal-800 pt-2 divide-y divide-ivory-200">
-                <div className="flex justify-between py-1.5">
-                  <span className="font-medium">Monday &ndash; Thursday:</span>
-                  <span>12:00 PM &ndash; 3:30 PM | 6:30 PM &ndash; 11:00 PM</span>
-                </div>
-                <div className="flex justify-between py-1.5">
-                  <span className="font-medium">Friday &amp; Saturday:</span>
-                  <span>12:00 PM &ndash; 3:30 PM | 6:30 PM &ndash; 11:45 PM</span>
-                </div>
-                <div className="flex justify-between py-1.5">
-                  <span className="font-medium">Sunday Hearth:</span>
-                  <span>12:00 PM &ndash; 10:30 PM (Continuous Service)</span>
-                </div>
+              {/* Kitchen Last Seating Note */}
+              <div className="pt-2 border-t border-ivory-200/80 flex items-center justify-between text-[11px] text-charcoal-500">
+                <span>Last seating / orders: 45 mins before close</span>
+                <span className="font-serif italic text-charcoal-600">Wood-Fired Hearth</span>
               </div>
             </div>
 

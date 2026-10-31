@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
+import { FoodImage } from "@/components/ui/FoodImage";
 
 interface GalleryPhoto {
   id: string;
@@ -17,63 +17,63 @@ const GALLERY_PHOTOS: GalleryPhoto[] = [
     category: "food",
     title: "Smoked Ember Margherita",
     caption: "48-hour cold proof sourdough blistered in 450°C stone oven.",
-    url: "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?auto=format&fit=crop&w=1000&q=80",
+    url: "/images/menu/margherita-pizza.jpg",
   },
   {
     id: "2",
     category: "interior",
     title: "The Hearth Dining Room",
     caption: "Acoustic oak booths, hand-thrown terracotta pendant lighting.",
-    url: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1000&q=80",
+    url: "/images/gallery/hearth-dining-room.jpg",
   },
   {
     id: "3",
     category: "kitchen",
     title: "Wood Flame & Embers",
     caption: "Seasoned olive wood feeding the continuous hearth coals.",
-    url: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1000&q=80",
+    url: "/images/restaurant-cover.jpg",
   },
   {
     id: "4",
     category: "food",
     title: "Truffled Burrata & Charred Peaches",
     caption: "Creamy artisanal cheese paired with caramelized stone fruit.",
-    url: "https://images.unsplash.com/photo-1592417817098-8f3d6ef23a85?auto=format&fit=crop&w=1000&q=80",
+    url: "/images/menu/burrata-peaches.jpg",
   },
   {
     id: "5",
     category: "kitchen",
     title: "Hand-Shaping Bronze-Die Tagliolini",
     caption: "Fresh extruded egg pasta prepped daily before lunch service.",
-    url: "https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=1000&q=80",
+    url: "/images/menu/cacio-e-pepe.jpg",
   },
   {
     id: "6",
     category: "interior",
     title: "Botanical Courtyard Terrace",
     caption: "Sunlit open-air terrace surrounded by purple basil and olive pots.",
-    url: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1000&q=80",
+    url: "/images/gallery/courtyard-terrace.jpg",
   },
   {
     id: "7",
     category: "food",
     title: "Burnt Basque Olive Oil Cheesecake",
     caption: "Molten creamy interior with caramelized smoked sea salt crust.",
-    url: "https://images.unsplash.com/photo-1533134242443-d4fd215305ad?auto=format&fit=crop&w=1000&q=80",
+    url: "/images/menu/basque-cheesecake.jpg",
   },
   {
     id: "8",
     category: "food",
     title: "Smoked Rosemary Paloma",
     caption: "Pink ruby grapefruit with charred garden rosemary smoke.",
-    url: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=1000&q=80",
+    url: "/images/menu/rosemary-paloma.jpg",
   },
   {
     id: "9",
     category: "kitchen",
     title: "Chef Raghav at the Hearth",
     caption: "Inspecting blistered crusts fresh off the baking stone.",
-    url: "https://images.unsplash.com/photo-1579684947550-22e945225d9a?auto=format&fit=crop&w=1000&q=80",
+    url: "/images/gallery/chef-hearth.jpg",
   },
 ];
 
@@ -151,7 +151,7 @@ export default function GalleryPage() {
               className="group relative rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-ivory-300 bg-ivory-200"
             >
               <div className="relative h-72 w-full overflow-hidden">
-                <Image
+                <FoodImage
                   src={photo.url}
                   alt={photo.title}
                   fill

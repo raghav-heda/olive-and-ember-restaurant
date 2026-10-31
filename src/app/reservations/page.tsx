@@ -63,7 +63,7 @@ export default function ReservationsPage() {
             {/* Atmosphere Card */}
             <div className="relative h-64 rounded-3xl overflow-hidden border border-ivory-300 shadow-md">
               <Image
-                src="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80"
+                src="/images/restaurant-cover.jpg"
                 alt="Dining booth"
                 fill
                 className="object-cover"

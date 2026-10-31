@@ -43,7 +43,7 @@ export default async function HomePage() {
         {/* Background Image with Dark Gradient Overlay */}
         <div className="absolute inset-0 z-0">
           <Image
-            src="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=2000&q=80"
+            src="/images/restaurant-cover.jpg"
             alt="Artisanal Hearth cooking at Olive & Ember"
             fill
             priority

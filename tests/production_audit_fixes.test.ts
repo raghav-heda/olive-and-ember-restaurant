@@ -103,5 +103,18 @@ describe("Production Audit Verification Suite", () => {
       expect(isAdminRole("GUEST")).toBe(false);
       expect(isAdminRole(undefined)).toBe(false);
     });
+
+    it("verifies customer footer contains no public staff or admin portal links", async () => {
+      const fs = await import("fs");
+      const path = await import("path");
+      const footerPath = path.resolve(__dirname, "../src/components/layout/Footer.tsx");
+      const content = fs.readFileSync(footerPath, "utf8");
+
+      expect(content.includes("Staff Portal")).toBe(false);
+      expect(content.includes('href="/admin')).toBe(false);
+      expect(content.includes("/privacy")).toBe(true);
+      expect(content.includes("/terms")).toBe(true);
+      expect(content.includes("Currency: INR (₹)")).toBe(true);
+    });
   });
 });

@@ -168,12 +168,6 @@ export function Footer() {
             <Link href="/terms" className="hover:text-ivory-200 transition-colors">
               Terms &amp; Cancellation
             </Link>
-            <Link
-              href="/admin/login"
-              className="text-ivory-300 hover:text-terracotta-400 transition-colors font-medium"
-            >
-              Staff Portal
-            </Link>
             <span>Currency: INR (₹)</span>
           </div>
         </div>

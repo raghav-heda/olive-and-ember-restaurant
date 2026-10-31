@@ -49,6 +49,24 @@ export default function CheckoutPage() {
   const [pricingLoading, setPricingLoading] = useState(false);
   const [pricingError, setPricingError] = useState<string | null>(null);
 
+  // Customer identifiers debounced for real-time coupon validation
+  const [debouncedPhone, setDebouncedPhone] = useState(customerPhone);
+  const [debouncedEmail, setDebouncedEmail] = useState(customerEmail);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedPhone(customerPhone);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [customerPhone]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedEmail(customerEmail);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [customerEmail]);
+
   // Submitting state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -78,6 +96,8 @@ export default function CheckoutPage() {
         items: payloadItems,
         fulfilmentType,
         couponCode: couponCode || null,
+        customerPhone: debouncedPhone || undefined,
+        customerEmail: debouncedEmail || undefined,
       }),
     })
       .then((res) => res.json())
@@ -99,7 +119,7 @@ export default function CheckoutPage() {
     return () => {
       isMounted = false;
     };
-  }, [items, fulfilmentType, couponCode]);
+  }, [items, fulfilmentType, couponCode, debouncedPhone, debouncedEmail]);
 
   const handleApplyCoupon = (e: React.FormEvent) => {
     e.preventDefault();
@@ -519,21 +539,41 @@ export default function CheckoutPage() {
                     </button>
                   </div>
                 ) : (
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={couponInput}
-                      onChange={(e) => setCouponInput(e.target.value)}
-                      placeholder="Try 'EMBER10' or 'WELCOME100'"
-                      className="w-full uppercase bg-ivory-50 border border-ivory-300 rounded-xl px-3 py-2 text-xs text-charcoal-900 focus:outline-none focus:border-terracotta-500 font-mono"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleApplyCoupon}
-                      className="bg-charcoal-900 hover:bg-terracotta-600 text-ivory-50 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors shrink-0"
-                    >
-                      Apply
-                    </button>
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={couponInput}
+                        onChange={(e) => setCouponInput(e.target.value)}
+                        placeholder="Try 'EMBER10' or 'WELCOME100'"
+                        className="w-full uppercase bg-ivory-50 border border-ivory-300 rounded-xl px-3 py-2 text-xs text-charcoal-900 focus:outline-none focus:border-terracotta-500 font-mono"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleApplyCoupon}
+                        className="bg-charcoal-900 hover:bg-terracotta-600 text-ivory-50 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors shrink-0"
+                      >
+                        Apply
+                      </button>
+                    </div>
+
+                    {pricing?.couponError && (
+                      <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-2 text-amber-900 text-xs animate-in fade-in">
+                        <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="font-medium text-[11px] leading-relaxed">
+                            {pricing.couponError}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleRemoveCoupon}
+                          className="text-[10px] text-amber-800 hover:text-amber-950 underline font-semibold shrink-0"
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

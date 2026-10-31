@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { items, fulfilmentType, couponCode } = body;
+    const { items, fulfilmentType, couponCode, customerPhone, customerEmail } = body;
 
     const restaurant = await prisma.restaurant.findFirst();
     if (!restaurant) {
@@ -19,6 +19,8 @@ export async function POST(req: Request) {
       items: items || [],
       fulfilmentType: fulfilmentType || "PICKUP",
       couponCode: couponCode || null,
+      customerPhone: customerPhone || null,
+      customerEmail: customerEmail || null,
     });
 
     return NextResponse.json(result);

@@ -36,6 +36,65 @@ export interface CalculationResult {
     discountType: string;
     discountValue: number;
   };
+  couponError?: string;
+}
+
+export function normalizePhoneNumber(phone?: string | null): string {
+  if (!phone) return "";
+  const digits = phone.replace(/\D/g, "");
+  if (digits.length === 12 && digits.startsWith("91")) {
+    return digits.slice(2);
+  }
+  if (digits.length === 11 && digits.startsWith("0")) {
+    return digits.slice(1);
+  }
+  return digits.length >= 10 ? digits.slice(-10) : digits;
+}
+
+export function normalizeEmail(email?: string | null): string | null {
+  if (!email || !email.trim()) return null;
+  return email.trim().toLowerCase();
+}
+
+export async function hasUsedWelcomeCoupon(params: {
+  restaurantId: string;
+  phone?: string | null;
+  email?: string | null;
+  prismaClient?: any;
+}): Promise<boolean> {
+  const db = params.prismaClient || prisma;
+  const rawPhone = params.phone?.trim();
+  const cleanEmail = normalizeEmail(params.email);
+  const normalizedPhone = rawPhone ? normalizePhoneNumber(rawPhone) : null;
+
+  if (!normalizedPhone && !cleanEmail) {
+    return false;
+  }
+
+  // Find non-cancelled orders with WELCOME100 for this restaurant
+  const candidateOrders = await db.order.findMany({
+    where: {
+      restaurantId: params.restaurantId,
+      couponCode: "WELCOME100",
+      status: { not: "CANCELLED" },
+    },
+    select: {
+      id: true,
+      customerPhone: true,
+      customerEmail: true,
+    },
+  });
+
+  for (const order of candidateOrders) {
+    if (cleanEmail && order.customerEmail && normalizeEmail(order.customerEmail) === cleanEmail) {
+      return true;
+    }
+    if (normalizedPhone && order.customerPhone && normalizePhoneNumber(order.customerPhone) === normalizedPhone) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 export async function calculateOrderPricing(params: {
@@ -43,8 +102,12 @@ export async function calculateOrderPricing(params: {
   items: CartInputItem[];
   fulfilmentType: "PICKUP" | "DELIVERY" | "DINE_IN";
   couponCode?: string | null;
+  customerPhone?: string | null;
+  customerEmail?: string | null;
+  prismaClient?: any;
 }): Promise<CalculationResult> {
-  const { restaurantId, items, fulfilmentType, couponCode } = params;
+  const { restaurantId, items, fulfilmentType, couponCode, customerPhone, customerEmail } = params;
+  const db = params.prismaClient || prisma;
 
   if (!items || items.length === 0) {
     throw new Error("Cannot calculate pricing for an empty cart");
@@ -130,12 +193,13 @@ export async function calculateOrderPricing(params: {
 
   let discountTotal = 0;
   let appliedCoupon: CalculationResult["appliedCoupon"] = undefined;
+  let couponError: string | undefined = undefined;
 
   if (couponCode && couponCode.trim()) {
     const cleanCode = couponCode.trim().toUpperCase();
     const now = new Date();
 
-    const coupon = await prisma.coupon.findFirst({
+    const coupon = await db.coupon.findFirst({
       where: {
         restaurantId,
         code: cleanCode,
@@ -146,24 +210,50 @@ export async function calculateOrderPricing(params: {
     });
 
     if (coupon) {
-      if (coupon.currentUses < coupon.maxUses && subtotal >= coupon.minOrderValue) {
-        if (coupon.discountType === "PERCENTAGE") {
-          let discount = (subtotal * coupon.discountValue) / 100;
-          if (coupon.maxDiscountAmount && discount > coupon.maxDiscountAmount) {
-            discount = coupon.maxDiscountAmount;
-          }
-          discountTotal = discount;
-        } else {
-          discountTotal = Math.min(coupon.discountValue, subtotal);
-        }
+      let isEligible = true;
 
-        appliedCoupon = {
-          code: coupon.code,
-          description: coupon.description,
-          discountType: coupon.discountType,
-          discountValue: coupon.discountValue,
-        };
+      // Server-side check for first-time welcome coupon eligibility
+      if (cleanCode === "WELCOME100") {
+        if (customerPhone || customerEmail) {
+          const alreadyUsed = await hasUsedWelcomeCoupon({
+            restaurantId,
+            phone: customerPhone,
+            email: customerEmail,
+            prismaClient: db,
+          });
+
+          if (alreadyUsed) {
+            isEligible = false;
+            couponError =
+              "WELCOME100 is available for first-time customers only. This offer has already been used with your account details.";
+          }
+        }
       }
+
+      if (isEligible) {
+        if (coupon.currentUses < coupon.maxUses && subtotal >= coupon.minOrderValue) {
+          if (coupon.discountType === "PERCENTAGE") {
+            let discount = (subtotal * coupon.discountValue) / 100;
+            if (coupon.maxDiscountAmount && discount > coupon.maxDiscountAmount) {
+              discount = coupon.maxDiscountAmount;
+            }
+            discountTotal = discount;
+          } else {
+            discountTotal = Math.min(coupon.discountValue, subtotal);
+          }
+
+          appliedCoupon = {
+            code: coupon.code,
+            description: coupon.description,
+            discountType: coupon.discountType,
+            discountValue: coupon.discountValue,
+          };
+        } else if (subtotal < coupon.minOrderValue) {
+          couponError = `Add items worth ₹${Math.ceil(coupon.minOrderValue - subtotal)} more to apply ${coupon.code}`;
+        }
+      }
+    } else {
+      couponError = "Invalid or expired promotional coupon code.";
     }
   }
 
@@ -191,5 +281,6 @@ export async function calculateOrderPricing(params: {
     deliveryFee,
     finalTotal,
     appliedCoupon,
+    couponError,
   };
 }

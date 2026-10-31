@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import prisma from "@/lib/db";
-import { calculateOrderPricing } from "@/lib/pricing";
+import { calculateOrderPricing, hasUsedWelcomeCoupon } from "@/lib/pricing";
 import { generateOrderCode } from "@/lib/availability";
 import { createRazorpayOrder } from "@/lib/razorpay";
 import { sendOrderNotification } from "@/lib/notifications";
@@ -64,7 +64,25 @@ export async function POST(req: Request) {
       items: validated.items,
       fulfilmentType: validated.fulfilmentType,
       couponCode: validated.couponCode,
+      customerPhone: validated.customerPhone,
+      customerEmail: validated.customerEmail,
     });
+
+    // Enforce first-time customer eligibility check for WELCOME100
+    if (validated.couponCode && validated.couponCode.trim().toUpperCase() === "WELCOME100") {
+      if (pricing.couponError) {
+        return NextResponse.json(
+          { error: pricing.couponError },
+          { status: 400 }
+        );
+      }
+      if (!pricing.appliedCoupon || pricing.appliedCoupon.code !== "WELCOME100") {
+        return NextResponse.json(
+          { error: "WELCOME100 is available for first-time customers only. This offer has already been used with your account details." },
+          { status: 400 }
+        );
+      }
+    }
 
     const publicCode = generateOrderCode();
 
@@ -85,6 +103,22 @@ export async function POST(req: Request) {
 
     // 3. Atomically persist Order & Immutable Item Snapshots
     const newOrder = await prisma.$transaction(async (tx) => {
+      // Concurrency guard: double-check WELCOME100 single-use rule inside atomic transaction
+      if (pricing.appliedCoupon?.code === "WELCOME100") {
+        const alreadyUsedInTx = await hasUsedWelcomeCoupon({
+          restaurantId: restaurant.id,
+          phone: validated.customerPhone,
+          email: validated.customerEmail,
+          prismaClient: tx,
+        });
+
+        if (alreadyUsedInTx) {
+          throw new Error(
+            "WELCOME100 is available for first-time customers only. This offer has already been used with your account details."
+          );
+        }
+      }
+
       const order = await tx.order.create({
         data: {
           publicCode,
@@ -202,9 +236,10 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
+    const isClientError = error.message?.includes("WELCOME100 is available") || error.status === 400;
     return NextResponse.json(
       { error: error.message || "Failed to create order" },
-      { status: 500 }
+      { status: isClientError ? 400 : 500 }
     );
   }
 }

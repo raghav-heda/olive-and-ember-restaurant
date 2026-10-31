@@ -30,13 +30,13 @@ export function Footer() {
           {/* Col 1: Brand & Philosophy */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full overflow-hidden bg-charcoal-800 flex items-center justify-center text-terracotta-400 relative">
+              <div className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center relative shadow-sm">
                 <Image
                   src="/images/restaurant-logo.png"
                   alt="Olive & Ember Logo"
                   width={36}
                   height={36}
-                  className="object-contain"
+                  className="w-full h-full object-cover"
                 />
               </div>
               <span className="font-serif text-2xl tracking-wide text-ivory-50">

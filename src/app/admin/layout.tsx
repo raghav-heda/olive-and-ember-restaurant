@@ -46,13 +46,13 @@ export default async function AdminLayout({
           {/* Brand & Staff Header */}
           <div className="p-6 border-b border-charcoal-800 space-y-3">
             <Link href="/admin" className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full overflow-hidden bg-charcoal-800 flex items-center justify-center text-terracotta-400 shadow relative">
+              <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center shadow relative">
                 <Image
                   src="/images/restaurant-logo.png"
                   alt="Olive & Ember Logo"
                   width={32}
                   height={32}
-                  className="object-contain"
+                  className="w-full h-full object-cover"
                 />
               </div>
               <div>

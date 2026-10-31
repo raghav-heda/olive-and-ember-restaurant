@@ -32,13 +32,13 @@ export function Navbar({ onOpenCart }: { onOpenCart?: () => void }) {
         <div className="flex items-center justify-between h-20">
           {/* Brand Logo */}
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-full overflow-hidden bg-charcoal-900 flex items-center justify-center text-terracotta-400 group-hover:scale-105 transition-transform duration-300 shadow-sm relative">
+            <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center group-hover:scale-105 transition-transform duration-300 shadow-sm relative">
               <Image
                 src="/images/restaurant-logo.png"
                 alt="Olive & Ember Logo"
                 width={40}
                 height={40}
-                className="object-contain"
+                className="w-full h-full object-cover"
                 priority
               />
             </div>

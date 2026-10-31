@@ -44,13 +44,13 @@ export default function AdminLoginPage() {
         {/* Logo and Title */}
         <div className="text-center space-y-2">
           <Link href="/" className="inline-flex items-center gap-2 group">
-            <div className="w-10 h-10 rounded-full overflow-hidden bg-charcoal-800 flex items-center justify-center text-terracotta-400 group-hover:scale-105 transition-transform shadow relative">
+            <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center group-hover:scale-105 transition-transform shadow relative">
               <Image
                 src="/images/restaurant-logo.png"
                 alt="Olive & Ember Logo"
                 width={40}
                 height={40}
-                className="object-contain"
+                className="w-full h-full object-cover"
                 priority
               />
             </div>

@@ -18,7 +18,27 @@ export async function seedDatabase(force = false) {
   try {
     const existingDishesCount = await prisma.menuItem.count();
     if (existingDishesCount > 0 && !force && process.env.FORCE_SEED !== "true") {
-      console.log(`ℹ️ Database already contains ${existingDishesCount} dishes. Skipping seed to preserve production data.`);
+      console.log(`ℹ️ Database already contains ${existingDishesCount} dishes. Synchronizing dish image assets and preserving production data...`);
+      const imageMap = {
+        'truffled-burrata-hearth-peaches': '/images/menu/burrata-peaches.jpg',
+        'hearth-focaccia-confit-garlic': '/images/menu/focaccia-garlic.jpg',
+        'smoked-ember-margherita': '/images/menu/margherita-pizza.jpg',
+        'wild-mushroom-black-truffle-pizza': '/images/menu/truffle-mushroom-pizza.jpg',
+        'charred-pepperoni-hot-honey-pizza': '/images/menu/pepperoni-pizza.jpg',
+        'cacio-e-pepe-tagliolini': '/images/menu/cacio-e-pepe.jpg',
+        'braised-lamb-shank-pappardelle': '/images/menu/lamb-pappardelle.jpg',
+        'wood-fired-coastal-seabass': '/images/menu/coastal-seabass.jpg',
+        'ember-charred-butternut-squash': '/images/menu/butternut-squash.jpg',
+        'burnt-basque-cheesecake': '/images/menu/basque-cheesecake.jpg',
+        'smoked-rosemary-pink-grapefruit': '/images/menu/rosemary-paloma.jpg',
+      };
+      for (const [slug, imageUrl] of Object.entries(imageMap)) {
+        await prisma.menuItem.updateMany({
+          where: { slug },
+          data: { imageUrl }
+        });
+      }
+      console.log(`✅ Synced verified local food image URLs across ${Object.keys(imageMap).length} dishes.`);
       return;
     }
   } catch (err) {

@@ -104,13 +104,6 @@ const GALLERY_PHOTOS: GalleryPhoto[] = [
     url: "/images/gallery/courtyard-terrace.jpg",
   },
   {
-    id: "wood-flame",
-    category: "kitchen",
-    title: "Wood Flame & Embers",
-    caption: "Seasoned olive wood continuously feeding the 450°C stone hearth oven.",
-    url: "/images/restaurant-cover.jpg",
-  },
-  {
     id: "chef-hearth",
     category: "kitchen",
     title: "Chef Raghav at the Hearth",

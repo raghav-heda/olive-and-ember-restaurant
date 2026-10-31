@@ -1,9 +1,30 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
+// Normalize database connection URL
+if (!process.env.DATABASE_URL) {
+  if (process.env.POSTGRES_PRISMA_URL) {
+    process.env.DATABASE_URL = process.env.POSTGRES_PRISMA_URL;
+  } else if (process.env.POSTGRES_URL) {
+    process.env.DATABASE_URL = process.env.POSTGRES_URL;
+  }
+}
+
 const prisma = new PrismaClient();
 
-async function main() {
+export async function seedDatabase(force = false) {
+  console.log("🌱 Checking Olive & Ember Kitchen database seed state...");
+
+  try {
+    const existingDishesCount = await prisma.menuItem.count();
+    if (existingDishesCount > 0 && !force && process.env.FORCE_SEED !== "true") {
+      console.log(`ℹ️ Database already contains ${existingDishesCount} dishes. Skipping seed to preserve production data.`);
+      return;
+    }
+  } catch (err) {
+    console.log("ℹ️ Database check returned empty or uninitialized schema. Proceeding with seed...");
+  }
+
   console.log("🌱 Starting Olive & Ember Kitchen database seed...");
 
   // Clean existing demo data idempotently
@@ -39,8 +60,8 @@ async function main() {
       currency: "INR",
       timezone: "Asia/Kolkata",
       taxNumber: "29AABCU9603R1Z7",
-      logoUrl: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=300&q=80",
-      coverImageUrl: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1600&q=80",
+      logoUrl: "/images/restaurant-logo.jpg",
+      coverImageUrl: "/images/restaurant-cover.jpg",
       isActive: true,
     },
   });
@@ -199,7 +220,7 @@ async function main() {
       slug: "hearth-focaccia-confit-garlic",
       description: "Warm olive oil-drenched sourdough focaccia with sea salt flakes, charred rosemary, and whipped confit garlic butter.",
       basePrice: 340,
-      imageUrl: "https://images.unsplash.com/photo-1586190848861-99aa4a171e90?auto=format&fit=crop&w=800&q=80",
+      imageUrl: "/images/menu/focaccia-garlic.jpg",
       isVegetarian: true,
       isVegan: false,
       isGlutenFree: false,
@@ -221,7 +242,7 @@ async function main() {
       slug: "smoked-ember-margherita",
       description: "San Marzano DOP tomato passata, fresh buffalo mozzarella, hand-torn sweet basil, cold-pressed olive oil, and smoked Maldon sea salt.",
       basePrice: 620,
-      imageUrl: "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?auto=format&fit=crop&w=800&q=80",
+      imageUrl: "/images/menu/margherita-pizza.jpg",
       isVegetarian: true,
       isVegan: false,
       isGlutenFree: false,
@@ -278,7 +299,7 @@ async function main() {
       slug: "wild-mushroom-black-truffle-pizza",
       description: "Roasted shiitake and porcini cream, fontina, charred thyme, shaved black summer truffle, and aged pecorino romano.",
       basePrice: 780,
-      imageUrl: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80",
+      imageUrl: "/images/menu/truffle-mushroom-pizza.jpg",
       isVegetarian: true,
       isVegan: false,
       isGlutenFree: false,
@@ -300,7 +321,7 @@ async function main() {
       slug: "charred-pepperoni-hot-honey-pizza",
       description: "Crispy-edged artisanal pepperoni, whole-milk mozzarella, fiery chili flakes, and slow-infused habanero honey.",
       basePrice: 740,
-      imageUrl: "https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=800&q=80",
+      imageUrl: "/images/menu/pepperoni-pizza.jpg",
       isVegetarian: false,
       isVegan: false,
       isGlutenFree: false,
@@ -344,7 +365,7 @@ async function main() {
       slug: "braised-lamb-shank-pappardelle",
       description: "6-hour slow-cooked tender pulled lamb shank, rich rosemary tomato jus, wide bronze-cut ribbons, and grated Parmigiano Reggiano.",
       basePrice: 760,
-      imageUrl: "https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=800&q=80",
+      imageUrl: "/images/menu/lamb-pappardelle.jpg",
       isVegetarian: false,
       isVegan: false,
       isGlutenFree: false,
@@ -366,7 +387,7 @@ async function main() {
       slug: "wood-fired-coastal-seabass",
       description: "Pan-crisped whole sea bass fillet baked over olive wood coals, fennel citrus salad, caperberry vinaigrette, and crushed baby potatoes.",
       basePrice: 890,
-      imageUrl: "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&w=800&q=80",
+      imageUrl: "/images/menu/coastal-seabass.jpg",
       isVegetarian: false,
       isVegan: false,
       isGlutenFree: true,
@@ -388,7 +409,7 @@ async function main() {
       slug: "ember-charred-butternut-squash",
       description: "Spiced roasted butternut squash steaks, whipped cashew garlic crème, pomegranate molasses reduction, toasted pumpkin seeds, and mint.",
       basePrice: 520,
-      imageUrl: "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=800&q=80",
+      imageUrl: "/images/menu/butternut-squash.jpg",
       isVegetarian: true,
       isVegan: true,
       isGlutenFree: true,
@@ -410,7 +431,7 @@ async function main() {
       slug: "burnt-basque-cheesecake",
       description: "Caramelized crust with a molten creamy center, finished with extra virgin olive oil and Maldon smoked sea salt flakes.",
       basePrice: 420,
-      imageUrl: "https://images.unsplash.com/photo-1533134242443-d4fd215305ad?auto=format&fit=crop&w=800&q=80",
+      imageUrl: "/images/menu/basque-cheesecake.jpg",
       isVegetarian: true,
       isVegan: false,
       isGlutenFree: true,
@@ -432,7 +453,7 @@ async function main() {
       slug: "smoked-rosemary-pink-grapefruit",
       description: "Freshly pressed ruby grapefruit juice, torched garden rosemary sprig, lime cordial, sparkling pink tonic, and volcanic black salt rim.",
       basePrice: 280,
-      imageUrl: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=800&q=80",
+      imageUrl: "/images/menu/rosemary-paloma.jpg",
       isVegetarian: true,
       isVegan: true,
       isGlutenFree: true,
@@ -576,11 +597,15 @@ async function main() {
   console.log("🔑 Admin credentials: admin@oliveandember.demo / AdminPass@2026");
 }
 
-main()
-  .catch((e) => {
-    console.error("❌ Seed error:", e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+export default seedDatabase;
+
+if (process.argv[1] && (process.argv[1].endsWith("seed.mjs") || process.argv[1].endsWith("seed.js"))) {
+  seedDatabase()
+    .catch((e) => {
+      console.error("❌ Seed error:", e);
+      process.exit(1);
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+}

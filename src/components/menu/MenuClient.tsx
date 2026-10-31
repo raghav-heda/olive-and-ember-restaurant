@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Image from "next/image";
+import { FoodImage } from "@/components/ui/FoodImage";
 import { formatCurrency } from "@/lib/utils";
 import { useCart } from "@/lib/store";
 import {
@@ -412,19 +413,13 @@ export function MenuClient({
                 <div>
                   {/* Photo & Badges */}
                   <div className="relative h-52 w-full bg-ivory-300 overflow-hidden">
-                    {item.imageUrl ? (
-                      <Image
-                        src={item.imageUrl}
-                        alt={item.name}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-500"
-                        sizes="(max-width: 768px) 100vw, 400px"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-charcoal-400">
-                        No image
-                      </div>
-                    )}
+                    <FoodImage
+                      src={item.imageUrl}
+                      alt={item.name}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
+                      sizes="(max-width: 768px) 100vw, 400px"
+                    />
 
                     {/* Dietary Indicators */}
                     <div className="absolute top-3 left-3 flex flex-wrap gap-1">
@@ -523,14 +518,13 @@ export function MenuClient({
           <div className="relative bg-ivory-50 border border-ivory-300 rounded-3xl max-w-lg w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
             {/* Modal Header */}
             <div className="relative h-48 w-full bg-ivory-300 shrink-0">
-              {activeModalItem.imageUrl && (
-                <Image
-                  src={activeModalItem.imageUrl}
-                  alt={activeModalItem.name}
-                  fill
-                  className="object-cover"
-                />
-              )}
+              <FoodImage
+                src={activeModalItem.imageUrl}
+                alt={activeModalItem.name}
+                fill
+                className="object-cover"
+                sizes="(max-width: 640px) 100vw, 600px"
+              />
               <div className="absolute inset-0 bg-gradient-to-t from-charcoal-950 via-charcoal-950/40 to-transparent" />
               <button
                 onClick={() => setActiveModalItem(null)}

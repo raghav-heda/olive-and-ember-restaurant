@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Flame, Lock, Mail, ArrowRight, AlertTriangle } from "lucide-react";
 
 export default function AdminLoginPage() {
@@ -43,8 +44,15 @@ export default function AdminLoginPage() {
         {/* Logo and Title */}
         <div className="text-center space-y-2">
           <Link href="/" className="inline-flex items-center gap-2 group">
-            <div className="w-10 h-10 rounded-full bg-charcoal-800 flex items-center justify-center text-terracotta-400 group-hover:scale-105 transition-transform shadow">
-              <Flame className="w-5 h-5 text-terracotta-400" />
+            <div className="w-10 h-10 rounded-full overflow-hidden bg-charcoal-800 flex items-center justify-center text-terracotta-400 group-hover:scale-105 transition-transform shadow relative">
+              <Image
+                src="/images/restaurant-logo.png"
+                alt="Olive & Ember Logo"
+                width={40}
+                height={40}
+                className="object-contain"
+                priority
+              />
             </div>
             <span className="font-serif text-2xl tracking-wide text-ivory-50">
               Olive &amp; Ember

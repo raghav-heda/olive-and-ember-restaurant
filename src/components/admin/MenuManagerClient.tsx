@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { FoodImage } from "@/components/ui/FoodImage";
 import { formatCurrency } from "@/lib/utils";
 import {
   Plus,
@@ -271,13 +272,7 @@ export function MenuManagerClient({
             <div>
               {/* Photo & Quick Toggles */}
               <div className="relative h-44 w-full bg-charcoal-950">
-                {item.imageUrl ? (
-                  <Image src={item.imageUrl} alt={item.name} fill className="object-cover" sizes="400px" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-charcoal-600 text-xs">
-                    No image
-                  </div>
-                )}
+                <FoodImage src={item.imageUrl} alt={item.name} fill className="object-cover" sizes="400px" />
                 <div className="absolute top-3 left-3 flex gap-1">
                   {item.isVegetarian && (
                     <span className="px-2 py-0.5 rounded bg-olive-700 text-ivory-50 text-[9px] font-bold">

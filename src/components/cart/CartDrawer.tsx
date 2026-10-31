@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCart } from "@/lib/store";
 import { formatCurrency } from "@/lib/utils";
 import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, UtensilsCrossed, Bike, Store } from "lucide-react";
-import Image from "next/image";
+import { FoodImage } from "@/components/ui/FoodImage";
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -132,7 +132,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                 >
                   {item.imageUrl && (
                     <div className="w-16 h-16 relative rounded-lg overflow-hidden shrink-0 bg-ivory-300">
-                      <Image
+                      <FoodImage
                         src={item.imageUrl}
                         alt={item.name}
                         fill

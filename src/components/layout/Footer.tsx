@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Flame, MapPin, Phone, Mail, Clock, ShieldCheck, ArrowRight, Check } from "lucide-react";
 
@@ -29,8 +30,14 @@ export function Footer() {
           {/* Col 1: Brand & Philosophy */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-charcoal-800 flex items-center justify-center text-terracotta-400">
-                <Flame className="w-5 h-5 text-terracotta-400" />
+              <div className="w-9 h-9 rounded-full overflow-hidden bg-charcoal-800 flex items-center justify-center text-terracotta-400 relative">
+                <Image
+                  src="/images/restaurant-logo.png"
+                  alt="Olive & Ember Logo"
+                  width={36}
+                  height={36}
+                  className="object-contain"
+                />
               </div>
               <span className="font-serif text-2xl tracking-wide text-ivory-50">
                 Olive &amp; Ember

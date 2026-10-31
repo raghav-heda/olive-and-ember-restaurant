@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/lib/store";
 import { ShoppingBag, Calendar, Menu as MenuIcon, X, Flame } from "lucide-react";
@@ -31,8 +32,15 @@ export function Navbar({ onOpenCart }: { onOpenCart?: () => void }) {
         <div className="flex items-center justify-between h-20">
           {/* Brand Logo */}
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-full bg-charcoal-900 flex items-center justify-center text-terracotta-400 group-hover:scale-105 transition-transform duration-300 shadow-sm">
-              <Flame className="w-5 h-5 text-terracotta-400 animate-pulse" />
+            <div className="w-10 h-10 rounded-full overflow-hidden bg-charcoal-900 flex items-center justify-center text-terracotta-400 group-hover:scale-105 transition-transform duration-300 shadow-sm relative">
+              <Image
+                src="/images/restaurant-logo.png"
+                alt="Olive & Ember Logo"
+                width={40}
+                height={40}
+                className="object-contain"
+                priority
+              />
             </div>
             <div className="flex flex-col">
               <span className="font-serif text-xl tracking-wide font-medium text-charcoal-900 group-hover:text-terracotta-600 transition-colors">

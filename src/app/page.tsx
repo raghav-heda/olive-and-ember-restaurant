@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { FoodImage } from "@/components/ui/FoodImage";
 import prisma from "@/lib/db";
 import { formatCurrency } from "@/lib/utils";
 import {
@@ -275,19 +276,13 @@ export default async function HomePage() {
               >
                 {/* Dish Photo */}
                 <div className="relative h-60 w-full overflow-hidden bg-ivory-300">
-                  {dish.imageUrl ? (
-                    <Image
-                      src={dish.imageUrl}
-                      alt={dish.name}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-500"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-charcoal-400">
-                      No photo available
-                    </div>
-                  )}
+                  <FoodImage
+                    src={dish.imageUrl}
+                    alt={dish.name}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  />
 
                   {/* Dietary Badge */}
                   <div className="absolute top-3 left-3 flex gap-1.5">

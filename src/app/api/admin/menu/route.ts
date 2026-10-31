@@ -11,7 +11,14 @@ const menuItemSchema = z.object({
   name: z.string().min(2, "Dish name must be at least 2 characters"),
   description: z.string().min(5, "Description must be at least 5 characters"),
   basePrice: z.number().min(0, "Price must be non-negative"),
-  imageUrl: z.string().url().optional().or(z.literal("")),
+  imageUrl: z
+    .string()
+    .refine(
+      (val) => !val || val.startsWith("/") || val.startsWith("http://") || val.startsWith("https://"),
+      { message: "Image URL must be a valid URL or relative path (e.g. /images/...)" }
+    )
+    .optional()
+    .or(z.literal("")),
   isVegetarian: z.boolean().default(false),
   isVegan: z.boolean().default(false),
   isGlutenFree: z.boolean().default(false),

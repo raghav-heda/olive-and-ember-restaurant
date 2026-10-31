@@ -1,5 +1,6 @@
 import { getCurrentSession, isAdminRole } from "@/lib/auth";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Flame,
   LayoutDashboard,
@@ -45,8 +46,14 @@ export default async function AdminLayout({
           {/* Brand & Staff Header */}
           <div className="p-6 border-b border-charcoal-800 space-y-3">
             <Link href="/admin" className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-charcoal-800 flex items-center justify-center text-terracotta-400 shadow">
-                <Flame className="w-4 h-4 text-terracotta-400" />
+              <div className="w-8 h-8 rounded-full overflow-hidden bg-charcoal-800 flex items-center justify-center text-terracotta-400 shadow relative">
+                <Image
+                  src="/images/restaurant-logo.png"
+                  alt="Olive & Ember Logo"
+                  width={32}
+                  height={32}
+                  className="object-contain"
+                />
               </div>
               <div>
                 <span className="font-serif text-lg font-bold text-ivory-50 block leading-tight">

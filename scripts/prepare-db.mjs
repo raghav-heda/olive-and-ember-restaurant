@@ -78,9 +78,9 @@ try {
   process.exit(1);
 }
 
-// In Vercel production build, sync the database schema to PostgreSQL if connected
-if (usePostgres && isPostgresUrl && isVercel) {
-  console.log(`[prepare-db] Vercel deployment with PostgreSQL detected. Ensuring database schema is synced...`);
+// In production / Vercel build with PostgreSQL, sync database schema and ensure initial seed
+if (usePostgres && isPostgresUrl) {
+  console.log(`[prepare-db] PostgreSQL connection detected. Ensuring database schema is synced...`);
   try {
     execSync('npx prisma db push --skip-generate --accept-data-loss', {
       cwd: rootDir,
@@ -89,6 +89,18 @@ if (usePostgres && isPostgresUrl && isVercel) {
     });
     console.log(`[prepare-db] Database schema synced successfully with PostgreSQL.`);
   } catch (error) {
-    console.warn(`[prepare-db] Note: Automatic prisma db push encountered a non-fatal warning during build.`);
+    console.warn(`[prepare-db] Note: Automatic prisma db push encountered a warning during build:`, error.message);
+  }
+
+  console.log(`[prepare-db] Verifying and seeding initial menu and restaurant data...`);
+  try {
+    execSync('node ./seed.mjs', {
+      cwd: rootDir,
+      stdio: 'inherit',
+      env: process.env,
+    });
+    console.log(`[prepare-db] Seed check completed successfully.`);
+  } catch (seedError) {
+    console.warn(`[prepare-db] Note: Seed execution during build:`, seedError.message);
   }
 }

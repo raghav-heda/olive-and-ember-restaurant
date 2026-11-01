@@ -173,19 +173,19 @@ export default async function HomePage() {
                 From our blistered Neapolitan crusts topped with San Marzano tomatoes to our 6-hour braised lamb shanks and torched rosemary elixirs, each offering is composed to nourish and delight.
               </p>
 
-              <div className="pt-4 flex flex-wrap items-center gap-8 border-t border-ivory-200">
+              <div className="pt-4 flex flex-wrap items-center gap-4 sm:gap-8 border-t border-ivory-200">
                 <div>
-                  <span className="block font-serif text-3xl font-bold text-terracotta-600">48h</span>
+                  <span className="block font-serif text-2xl sm:text-3xl font-bold text-terracotta-600">48h</span>
                   <span className="text-xs text-charcoal-700">Dough Fermentation</span>
                 </div>
-                <div className="w-px h-10 bg-ivory-300" />
+                <div className="hidden sm:block w-px h-10 bg-ivory-300" />
                 <div>
-                  <span className="block font-serif text-3xl font-bold text-olive-600">100%</span>
+                  <span className="block font-serif text-2xl sm:text-3xl font-bold text-olive-600">100%</span>
                   <span className="text-xs text-charcoal-700">Extra Virgin Olive Oil</span>
                 </div>
-                <div className="w-px h-10 bg-ivory-300" />
+                <div className="hidden sm:block w-px h-10 bg-ivory-300" />
                 <div>
-                  <span className="block font-serif text-3xl font-bold text-charcoal-900">450°C</span>
+                  <span className="block font-serif text-2xl sm:text-3xl font-bold text-charcoal-900">450°C</span>
                   <span className="text-xs text-charcoal-700">Refractory Stone Hearth</span>
                 </div>
               </div>

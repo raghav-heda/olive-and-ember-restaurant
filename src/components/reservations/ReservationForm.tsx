@@ -347,8 +347,8 @@ export function ReservationForm() {
             {/* Lunch Service Group */}
             <div className="space-y-2.5">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <Sun className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                <div className="flex flex-wrap items-baseline gap-1.5">
+                  <Sun className="w-3.5 h-3.5 text-amber-600 shrink-0 self-center" />
                   <span className="font-serif text-sm font-bold text-charcoal-900">
                     Lunch
                   </span>
@@ -358,7 +358,7 @@ export function ReservationForm() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 sm:gap-2.5">
                 {DEFAULT_LUNCH_SLOTS.map((slot) => {
                   const isSelected = timeSlot === slot;
                   return (
@@ -388,8 +388,8 @@ export function ReservationForm() {
             {/* Dinner Service Group */}
             <div className="space-y-2.5">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <Moon className="w-3.5 h-3.5 text-terracotta-600 shrink-0" />
+                <div className="flex flex-wrap items-baseline gap-1.5">
+                  <Moon className="w-3.5 h-3.5 text-terracotta-600 shrink-0 self-center" />
                   <span className="font-serif text-sm font-bold text-charcoal-900">
                     Dinner
                   </span>
@@ -399,7 +399,7 @@ export function ReservationForm() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-8 gap-2.5">
+              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-8 gap-2 sm:gap-2.5">
                 {DEFAULT_DINNER_SLOTS.map((slot) => {
                   const isSelected = timeSlot === slot;
                   return (

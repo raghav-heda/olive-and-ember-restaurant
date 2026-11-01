@@ -202,7 +202,7 @@ export function PromotionsManagerClient({ initialCoupons }: { initialCoupons: Ad
 
           <form
             onSubmit={handleCreate}
-            className="relative bg-charcoal-900 border border-charcoal-800 rounded-3xl max-w-md w-full p-6 sm:p-8 space-y-4 shadow-2xl text-xs text-ivory-200"
+            className="relative bg-charcoal-900 border border-charcoal-800 rounded-3xl max-w-md w-full p-6 sm:p-8 space-y-4 shadow-2xl text-xs text-ivory-200 max-h-[90vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between border-b border-charcoal-800 pb-3">
               <h3 className="font-serif text-lg font-bold text-ivory-50">Create Coupon Code</h3>

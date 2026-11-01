@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { useCart } from "@/lib/store";
 import { formatCurrency } from "@/lib/utils";
@@ -23,6 +24,29 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     setTableNumber,
   } = useCart();
 
+  // Lock background body scroll when cart drawer is open
+  useEffect(() => {
+    if (isOpen) {
+      const originalStyle = window.getComputedStyle(document.body).overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = originalStyle;
+      };
+    }
+  }, [isOpen]);
+
+  // Close drawer on Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
@@ -33,7 +57,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         className="absolute inset-0 bg-charcoal-950/60 backdrop-blur-sm transition-opacity"
       />
 
-      <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
+      <div className="fixed inset-y-0 right-0 max-w-full flex pl-0 sm:pl-8 md:pl-10">
         <div className="w-screen max-w-md bg-ivory-50 border-l border-ivory-300 shadow-2xl flex flex-col">
           {/* Drawer Header */}
           <div className="p-6 border-b border-ivory-200 flex items-center justify-between bg-ivory-100">

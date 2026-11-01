@@ -159,9 +159,9 @@ export function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-12 pt-8 border-t border-charcoal-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-ivory-400">
+        <div className="mt-12 pt-8 border-t border-charcoal-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-ivory-400 text-center sm:text-left">
           <p>© {new Date().getFullYear()} Olive &amp; Ember Kitchen. All rights reserved.</p>
-          <div className="flex items-center gap-6 text-[11px]">
+          <div className="flex flex-wrap items-center justify-center sm:justify-end gap-x-6 gap-y-2 text-[11px]">
             <Link href="/privacy" className="hover:text-ivory-200 transition-colors">
               Privacy Policy
             </Link>

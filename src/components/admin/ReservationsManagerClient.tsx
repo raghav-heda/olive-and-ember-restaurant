@@ -262,7 +262,7 @@ export function ReservationsManagerClient({
             className="absolute inset-0 bg-charcoal-950/80 backdrop-blur-sm"
           />
 
-          <div className="relative bg-charcoal-900 border border-charcoal-800 rounded-3xl max-w-lg w-full p-6 space-y-6 shadow-2xl text-xs">
+          <div className="relative bg-charcoal-900 border border-charcoal-800 rounded-3xl max-w-lg w-full p-6 space-y-6 shadow-2xl text-xs max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-charcoal-800 pb-4">
               <div>
                 <span className="font-mono text-terracotta-400 font-bold text-xs">

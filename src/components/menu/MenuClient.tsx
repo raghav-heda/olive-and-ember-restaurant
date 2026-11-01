@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import { FoodImage } from "@/components/ui/FoodImage";
 import { formatCurrency } from "@/lib/utils";
@@ -240,6 +240,29 @@ export function MenuClient({
     setActiveModalItem(null);
   };
 
+  // Lock background body scroll when customization modal is active
+  useEffect(() => {
+    if (activeModalItem) {
+      const originalStyle = window.getComputedStyle(document.body).overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = originalStyle;
+      };
+    }
+  }, [activeModalItem]);
+
+  // Close modal on Escape key press
+  useEffect(() => {
+    if (!activeModalItem) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setActiveModalItem(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [activeModalItem]);
+
   return (
     <div className="space-y-8">
       {/* Toast Alert */}
@@ -320,7 +343,7 @@ export function MenuClient({
         </div>
 
         {/* Row 3: Dietary Classification Filters */}
-        <div className="flex items-center gap-2 pt-2 border-t border-ivory-200 text-xs">
+        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-ivory-200 text-xs">
           <span className="text-[11px] font-bold text-charcoal-700 uppercase tracking-wider">
             Dietary:
           </span>
@@ -620,7 +643,7 @@ export function MenuClient({
             </div>
 
             {/* Modal Footer */}
-            <div className="p-6 border-t border-ivory-200 bg-ivory-100 flex items-center justify-between gap-4">
+            <div className="p-4 sm:p-6 border-t border-ivory-200 bg-ivory-100 flex items-center justify-between gap-3 sm:gap-4">
               {/* Quantity Counter */}
               <div className="flex items-center gap-3 border border-ivory-300 bg-ivory-50 rounded-xl px-3 py-2">
                 <button

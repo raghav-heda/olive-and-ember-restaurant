@@ -135,7 +135,7 @@ export default function GalleryPage() {
         </div>
 
         {/* Filter Navigation */}
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none justify-start sm:justify-center">
           <button
             onClick={() => setFilter("all")}
             className={`px-5 py-2 rounded-full text-xs font-semibold transition-colors ${

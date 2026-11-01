@@ -20,6 +20,7 @@ const settingsSchema = z.object({
   dineInEnabled: z.boolean(),
   pickupEnabled: z.boolean(),
   deliveryEnabled: z.boolean(),
+  openingHoursJson: z.string().optional(),
 });
 
 export async function POST(req: Request) {
@@ -51,6 +52,7 @@ export async function POST(req: Request) {
         dineInEnabled: validated.dineInEnabled,
         pickupEnabled: validated.pickupEnabled,
         deliveryEnabled: validated.deliveryEnabled,
+        ...(validated.openingHoursJson ? { openingHoursJson: validated.openingHoursJson } : {}),
       },
     });
 

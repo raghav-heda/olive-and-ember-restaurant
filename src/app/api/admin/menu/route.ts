@@ -5,6 +5,55 @@ import { requireAuth, isAdminRole } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
+export async function GET(req: Request) {
+  try {
+    const session = await requireAuth(["OWNER", "ADMIN", "STAFF"]);
+    const rawItems = await prisma.menuItem.findMany({
+      where: { restaurantId: session.restaurantId },
+      orderBy: { displayOrder: "asc" },
+      include: {
+        category: {
+          select: { id: true, name: true, slug: true },
+        },
+      },
+    });
+
+    const items = rawItems.map((item) => ({
+      id: item.id,
+      categoryId: item.categoryId,
+      name: item.name,
+      slug: item.slug,
+      description: item.description,
+      basePrice: item.basePrice,
+      imageUrl: item.imageUrl,
+      isVegetarian: item.isVegetarian,
+      isVegan: item.isVegan,
+      isGlutenFree: item.isGlutenFree,
+      spiceLevel: item.spiceLevel,
+      preparationTimeMinutes: item.preparationTimeMinutes,
+      isAvailable: item.isAvailable,
+      isFeatured: item.isFeatured,
+      category: item.category,
+    }));
+
+    return NextResponse.json(
+      {
+        success: true,
+        count: items.length,
+        items,
+      },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate",
+        },
+      }
+    );
+  } catch (error: any) {
+    const status = error.message?.includes("FORBIDDEN") ? 403 : error.message?.includes("UNAUTHORIZED") ? 401 : 500;
+    return NextResponse.json({ error: error.message }, { status });
+  }
+}
+
 const menuItemSchema = z.object({
   id: z.string().optional(),
   categoryId: z.string().min(1, "Category is required"),
@@ -30,7 +79,7 @@ const menuItemSchema = z.object({
 
 export async function POST(req: Request) {
   try {
-    const session = await requireAuth(["OWNER", "ADMIN"]);
+    const session = await requireAuth(["OWNER", "ADMIN"], req);
     const body = await req.json();
     const validated = menuItemSchema.parse(body);
 
@@ -120,7 +169,7 @@ export async function POST(req: Request) {
 
 export async function PATCH(req: Request) {
   try {
-    const session = await requireAuth();
+    const session = await requireAuth(["ADMIN", "OWNER", "STAFF"], req);
     const body = await req.json();
     const { id, isAvailable, isFeatured, basePrice } = body;
 
@@ -173,7 +222,7 @@ export async function PATCH(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
-    const session = await requireAuth(["OWNER", "ADMIN"]);
+    const session = await requireAuth(["OWNER", "ADMIN"], req);
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
 

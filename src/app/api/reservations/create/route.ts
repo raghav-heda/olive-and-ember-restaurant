@@ -13,7 +13,7 @@ const reservationSchema = z.object({
   customerName: z.string().min(2, "Name must be at least 2 characters").max(80),
   customerPhone: z.string().min(8, "Valid phone number is required").max(20),
   customerEmail: z.string().email("Valid email address is required").optional().or(z.literal("")),
-  guestCount: z.number().int().min(1, "Guest count must be at least 1").max(12),
+  guestCount: z.number().int().min(1, "Guest count must be at least 1").max(50),
   reservationDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format"),
   timeSlot: z.string().regex(/^\d{2}:\d{2}$/, "Time must be in HH:mm format"),
   specialRequests: z.string().max(500).optional(),

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import { Tag, Plus, Trash2, Check, X, Percent, IndianRupee } from "lucide-react";
+import { Tag, Plus, Trash2, Check, X, Percent, IndianRupee, RefreshCw } from "lucide-react";
 
 export interface AdminCoupon {
   id: string;
@@ -22,6 +22,36 @@ export interface AdminCoupon {
 export function PromotionsManagerClient({ initialCoupons }: { initialCoupons: AdminCoupon[] }) {
   const [coupons, setCoupons] = useState<AdminCoupon[]>(initialCoupons);
   const [modalOpen, setModalOpen] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Real-time synchronization with production database
+  const fetchLiveCoupons = useCallback(async (isSilent = false) => {
+    if (!isSilent) setIsRefreshing(true);
+    try {
+      const res = await fetch("/api/admin/promotions", {
+        cache: "no-store",
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.success && Array.isArray(data.coupons)) {
+        setCoupons(data.coupons);
+      }
+    } catch {
+      // background polling fallback
+    } finally {
+      if (!isSilent) setIsRefreshing(false);
+    }
+  }, []);
+
+  // Poll database every 4 seconds when page is visible
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (typeof document !== "undefined" && !document.hidden) {
+        fetchLiveCoupons(true);
+      }
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [fetchLiveCoupons]);
 
   // Form state
   const [code, setCode] = useState("");
@@ -64,6 +94,7 @@ export function PromotionsManagerClient({ initialCoupons }: { initialCoupons: Ad
       setModalOpen(false);
       setCode("");
       setDescription("");
+      fetchLiveCoupons(true);
     } catch (err: any) {
       alert(err.message || "Failed to create coupon");
     } finally {
@@ -83,6 +114,7 @@ export function PromotionsManagerClient({ initialCoupons }: { initialCoupons: Ad
       setCoupons((prev) =>
         prev.map((c) => (c.id === coupon.id ? { ...c, isActive: nextVal } : c))
       );
+      fetchLiveCoupons(true);
     } catch (err: any) {
       alert(err.message);
     }
@@ -94,6 +126,7 @@ export function PromotionsManagerClient({ initialCoupons }: { initialCoupons: Ad
       const res = await fetch(`/api/admin/promotions?id=${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete coupon");
       setCoupons((prev) => prev.filter((c) => c.id !== id));
+      fetchLiveCoupons(true);
     } catch (err: any) {
       alert(err.message);
     }
@@ -109,13 +142,32 @@ export function PromotionsManagerClient({ initialCoupons }: { initialCoupons: Ad
             Configure server-enforced discounts, minimum basket values, and redemption ceilings.
           </p>
         </div>
-        <button
-          onClick={() => setModalOpen(true)}
-          className="inline-flex items-center gap-2 bg-terracotta-600 hover:bg-terracotta-500 text-ivory-50 px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors shadow"
-        >
-          <Plus className="w-4 h-4" />
-          <span>New Coupon Rule</span>
-        </button>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-950/80 border border-emerald-800 text-[10px] font-mono text-emerald-400 font-bold uppercase tracking-wider shadow-sm">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span>Live Sync 4s</span>
+          </span>
+
+          <button
+            type="button"
+            onClick={() => fetchLiveCoupons(false)}
+            disabled={isRefreshing}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-charcoal-950 hover:bg-charcoal-800 border border-charcoal-700 text-xs text-ivory-200 transition-colors shadow-sm"
+            title="Immediately refresh coupons from database"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin text-terracotta-400" : ""}`} />
+            <span className="hidden sm:inline">Refresh</span>
+          </button>
+
+          <button
+            onClick={() => setModalOpen(true)}
+            className="inline-flex items-center gap-2 bg-terracotta-600 hover:bg-terracotta-500 text-ivory-50 px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors shadow"
+          >
+            <Plus className="w-4 h-4" />
+            <span>New Coupon Rule</span>
+          </button>
+        </div>
       </div>
 
       {/* Grid of Coupons */}

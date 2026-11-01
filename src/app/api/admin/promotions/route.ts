@@ -5,6 +5,47 @@ import { requireAuth } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
+export async function GET(req: Request) {
+  try {
+    const session = await requireAuth(["OWNER", "ADMIN"]);
+    const rawCoupons = await prisma.coupon.findMany({
+      where: { restaurantId: session.restaurantId },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const coupons = rawCoupons.map((c) => ({
+      id: c.id,
+      code: c.code,
+      description: c.description,
+      discountType: c.discountType,
+      discountValue: c.discountValue,
+      minOrderValue: c.minOrderValue,
+      maxDiscountAmount: c.maxDiscountAmount,
+      startDate: c.startDate.toISOString(),
+      endDate: c.endDate.toISOString(),
+      maxUses: c.maxUses,
+      currentUses: c.currentUses,
+      isActive: c.isActive,
+    }));
+
+    return NextResponse.json(
+      {
+        success: true,
+        count: coupons.length,
+        coupons,
+      },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate",
+        },
+      }
+    );
+  } catch (error: any) {
+    const status = error.message?.includes("FORBIDDEN") ? 403 : error.message?.includes("UNAUTHORIZED") ? 401 : 500;
+    return NextResponse.json({ error: error.message }, { status });
+  }
+}
+
 const couponSchema = z.object({
   code: z.string().min(3).max(20),
   description: z.string().min(5).max(120),
@@ -20,7 +61,7 @@ const couponSchema = z.object({
 
 export async function POST(req: Request) {
   try {
-    const session = await requireAuth(["OWNER", "ADMIN"]);
+    const session = await requireAuth(["OWNER", "ADMIN"], req);
     const body = await req.json();
     const validated = couponSchema.parse(body);
 
@@ -67,7 +108,7 @@ export async function POST(req: Request) {
 
 export async function PATCH(req: Request) {
   try {
-    const session = await requireAuth(["OWNER", "ADMIN"]);
+    const session = await requireAuth(["OWNER", "ADMIN"], req);
     const body = await req.json();
     const { id, isActive } = body;
 
@@ -97,7 +138,7 @@ export async function PATCH(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
-    const session = await requireAuth(["OWNER", "ADMIN"]);
+    const session = await requireAuth(["OWNER", "ADMIN"], req);
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
 

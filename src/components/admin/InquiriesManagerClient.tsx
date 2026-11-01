@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { formatDateTime } from "@/lib/utils";
 import {
   Mail,
@@ -12,6 +12,7 @@ import {
   Phone,
   MessageSquare,
   AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 
 export interface ContactInquiryItem {
@@ -35,6 +36,40 @@ export function InquiriesManagerClient({
   const [filter, setFilter] = useState<"all" | "unread" | "read">("all");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [selectedInquiry, setSelectedInquiry] = useState<ContactInquiryItem | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Real-time synchronization with production database
+  const fetchLiveInquiries = useCallback(async (isSilent = false) => {
+    if (!isSilent) setIsRefreshing(true);
+    try {
+      const res = await fetch("/api/admin/inquiries", {
+        cache: "no-store",
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.success && Array.isArray(data.inquiries)) {
+        setInquiries(data.inquiries);
+        if (selectedInquiry) {
+          const freshSelected = data.inquiries.find((i: ContactInquiryItem) => i.id === selectedInquiry.id);
+          if (freshSelected) setSelectedInquiry(freshSelected);
+        }
+      }
+    } catch {
+      // silent background fallback
+    } finally {
+      if (!isSilent) setIsRefreshing(false);
+    }
+  }, [selectedInquiry]);
+
+  // Poll database every 4 seconds when page is visible
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (typeof document !== "undefined" && !document.hidden) {
+        fetchLiveInquiries(true);
+      }
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [fetchLiveInquiries]);
 
   const handleToggleRead = async (inquiry: ContactInquiryItem, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
@@ -57,6 +92,7 @@ export function InquiriesManagerClient({
         if (selectedInquiry?.id === inquiry.id) {
           setSelectedInquiry((prev) => (prev ? { ...prev, isRead: nextState } : null));
         }
+        fetchLiveInquiries(true);
       }
     } catch {
       // ignore
@@ -98,7 +134,23 @@ export function InquiriesManagerClient({
             />
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-950/80 border border-emerald-800 text-[10px] font-mono text-emerald-400 font-bold uppercase tracking-wider shadow-sm">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span>Live Sync 4s</span>
+            </span>
+
+            <button
+              type="button"
+              onClick={() => fetchLiveInquiries(false)}
+              disabled={isRefreshing}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-charcoal-950 hover:bg-charcoal-800 border border-charcoal-700 text-xs text-ivory-200 transition-colors shadow-sm"
+              title="Immediately refresh inquiries from database"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin text-terracotta-400" : ""}`} />
+              <span className="hidden sm:inline">Refresh</span>
+            </button>
+
             <button
               onClick={() => setFilter("all")}
               className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-colors ${

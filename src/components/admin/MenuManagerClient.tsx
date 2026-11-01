@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { FoodImage } from "@/components/ui/FoodImage";
 import { formatCurrency } from "@/lib/utils";
@@ -16,6 +16,7 @@ import {
   Clock,
   Eye,
   EyeOff,
+  RefreshCw,
 } from "lucide-react";
 
 export interface AdminCategory {
@@ -58,6 +59,36 @@ export function MenuManagerClient({
   const [items, setItems] = useState<AdminMenuItem[]>(initialItems);
   const [selectedCat, setSelectedCat] = useState("ALL");
   const [search, setSearch] = useState("");
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Real-time synchronization with production database
+  const fetchLiveMenuItems = useCallback(async (isSilent = false) => {
+    if (!isSilent) setIsRefreshing(true);
+    try {
+      const res = await fetch("/api/admin/menu", {
+        cache: "no-store",
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.success && Array.isArray(data.items)) {
+        setItems(data.items);
+      }
+    } catch {
+      // background polling fallback
+    } finally {
+      if (!isSilent) setIsRefreshing(false);
+    }
+  }, []);
+
+  // Poll database every 4 seconds when page is visible
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (typeof document !== "undefined" && !document.hidden) {
+        fetchLiveMenuItems(true);
+      }
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [fetchLiveMenuItems]);
 
   // Modal State for Create / Edit
   const [modalOpen, setModalOpen] = useState(false);
@@ -167,6 +198,7 @@ export function MenuManagerClient({
         ]);
       }
       setModalOpen(false);
+      fetchLiveMenuItems(true);
     } catch (err: any) {
       alert(err.message || "Failed to save dish");
     } finally {
@@ -186,6 +218,7 @@ export function MenuManagerClient({
       setItems((prev) =>
         prev.map((i) => (i.id === item.id ? { ...i, isAvailable: nextVal } : i))
       );
+      fetchLiveMenuItems(true);
     } catch (err: any) {
       alert(err.message);
     }
@@ -203,6 +236,7 @@ export function MenuManagerClient({
       setItems((prev) =>
         prev.map((i) => (i.id === item.id ? { ...i, isFeatured: nextVal } : i))
       );
+      fetchLiveMenuItems(true);
     } catch (err: any) {
       alert(err.message);
     }
@@ -214,6 +248,7 @@ export function MenuManagerClient({
       const res = await fetch(`/api/admin/menu?id=${itemId}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete menu item");
       setItems((prev) => prev.filter((i) => i.id !== itemId));
+      fetchLiveMenuItems(true);
     } catch (err: any) {
       alert(err.message);
     }
@@ -224,6 +259,23 @@ export function MenuManagerClient({
       {/* Top Action Ribbon */}
       <div className="bg-charcoal-900 border border-charcoal-800 rounded-3xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+          {/* Live Sync Status Pill */}
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-950/80 border border-emerald-800 text-[10px] font-mono text-emerald-400 font-bold uppercase tracking-wider shadow-sm">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span>Live Sync 4s</span>
+          </span>
+
+          <button
+            type="button"
+            onClick={() => fetchLiveMenuItems(false)}
+            disabled={isRefreshing}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-charcoal-950 hover:bg-charcoal-800 border border-charcoal-700 text-xs text-ivory-200 transition-colors shadow-sm"
+            title="Immediately refresh dishes from database"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin text-terracotta-400" : ""}`} />
+            <span className="hidden sm:inline">Refresh</span>
+          </button>
+
           <div className="relative w-full sm:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-charcoal-500" />
             <input

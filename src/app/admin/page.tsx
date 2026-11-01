@@ -17,6 +17,7 @@ import {
   Sparkles,
   Mail,
 } from "lucide-react";
+import { DashboardLiveMetrics } from "@/components/admin/DashboardLiveMetrics";
 
 export const revalidate = 0; // Dynamic server component
 
@@ -147,72 +148,19 @@ export default async function AdminDashboardPage() {
         </div>
       )}
 
-      {/* KPI Cards Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        {/* Paid Revenue */}
-        <div className="p-6 rounded-3xl bg-charcoal-900 border border-charcoal-800 space-y-3 shadow-lg">
-          <div className="flex items-center justify-between text-ivory-400">
-            <span className="text-xs font-bold uppercase tracking-wider">Paid Revenue</span>
-            <div className="w-8 h-8 rounded-xl bg-emerald-950/60 border border-emerald-800 flex items-center justify-center text-emerald-400">
-              <IndianRupee className="w-4 h-4" />
-            </div>
-          </div>
-          <p className="font-serif text-3xl font-bold text-ivory-50">
-            {formatCurrency(totalPaidRevenue)}
-          </p>
-          <p className="text-[11px] text-ivory-400">
-            From {paidOrders.length} settled customer orders
-          </p>
-        </div>
-
-        {/* Orders Awaiting Kitchen */}
-        <div className="p-6 rounded-3xl bg-charcoal-900 border border-charcoal-800 space-y-3 shadow-lg">
-          <div className="flex items-center justify-between text-ivory-400">
-            <span className="text-xs font-bold uppercase tracking-wider">Active Tickets</span>
-            <div className="w-8 h-8 rounded-xl bg-terracotta-950/60 border border-terracotta-800 flex items-center justify-center text-terracotta-400">
-              <UtensilsCrossed className="w-4 h-4" />
-            </div>
-          </div>
-          <p className="font-serif text-3xl font-bold text-terracotta-400">
-            {ordersAwaitingAction}
-          </p>
-          <p className="text-[11px] text-ivory-400">
-            {totalOrdersCount} total lifetime orders
-          </p>
-        </div>
-
-        {/* Pending Reservations */}
-        <div className="p-6 rounded-3xl bg-charcoal-900 border border-charcoal-800 space-y-3 shadow-lg">
-          <div className="flex items-center justify-between text-ivory-400">
-            <span className="text-xs font-bold uppercase tracking-wider">Table Requests</span>
-            <div className="w-8 h-8 rounded-xl bg-amber-950/60 border border-amber-800 flex items-center justify-center text-amber-400">
-              <Calendar className="w-4 h-4" />
-            </div>
-          </div>
-          <p className="font-serif text-3xl font-bold text-amber-400">
-            {pendingReservations}
-          </p>
-          <p className="text-[11px] text-ivory-400">
-            {confirmedReservations} confirmed upcoming bookings
-          </p>
-        </div>
-
-        {/* Average Order Value (AOV) */}
-        <div className="p-6 rounded-3xl bg-charcoal-900 border border-charcoal-800 space-y-3 shadow-lg">
-          <div className="flex items-center justify-between text-ivory-400">
-            <span className="text-xs font-bold uppercase tracking-wider">Average Ticket</span>
-            <div className="w-8 h-8 rounded-xl bg-blue-950/60 border border-blue-800 flex items-center justify-center text-blue-400">
-              <TrendingUp className="w-4 h-4" />
-            </div>
-          </div>
-          <p className="font-serif text-3xl font-bold text-ivory-50">
-            {formatCurrency(averageOrderValue)}
-          </p>
-          <p className="text-[11px] text-ivory-400">
-            Across {menuItems.length} active menu catalog items
-          </p>
-        </div>
-      </div>
+      {/* Live KPI Metric Cards */}
+      <DashboardLiveMetrics
+        initialMetrics={{
+          totalPaidRevenue,
+          paidOrdersCount: paidOrders.length,
+          ordersAwaitingAction,
+          totalOrdersCount,
+          pendingReservations,
+          confirmedReservations,
+          averageOrderValue,
+          menuItemsCount: menuItems.length,
+        }}
+      />
 
       {/* 2-Column Section: Recent Orders & Table Bookings */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

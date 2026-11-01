@@ -1,7 +1,8 @@
 import prisma from "@/lib/db";
 import { MenuClient, MenuItemData } from "@/components/menu/MenuClient";
 
-export const revalidate = 30; // ISR 30s cache
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function MenuPage() {
   const categories = await prisma.menuCategory.findMany({

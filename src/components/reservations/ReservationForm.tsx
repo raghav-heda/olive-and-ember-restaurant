@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { DEFAULT_TIME_SLOTS } from "@/lib/availability";
@@ -56,10 +56,78 @@ const DINNER_15_MIN_SLOTS = [
   "22:00", "22:15", "22:30",
 ];
 
-export function ReservationForm() {
+export interface ReservationSettingsData {
+  restaurantName: string;
+  phone: string;
+  address: string;
+  maxPartySize: number;
+  advanceBookingDays: number;
+  dineInEnabled: boolean;
+  slotDurationMinutes?: number;
+  openingHours?: any;
+}
+
+export function ReservationForm({
+  initialSettings,
+}: {
+  initialSettings?: ReservationSettingsData;
+} = {}) {
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   const defaultDateStr = tomorrow.toISOString().split("T")[0];
+
+  const [liveSettings, setLiveSettings] = useState<ReservationSettingsData | undefined>(initialSettings);
+
+  // Live-sync restaurant configuration directly from the database
+  const fetchLiveSettings = useCallback(async () => {
+    try {
+      const res = await fetch("/api/settings", { cache: "no-store" });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.success && data.settings) {
+        setLiveSettings(data.settings);
+      }
+    } catch {
+      // background polling fallback
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchLiveSettings();
+    const interval = setInterval(() => {
+      if (typeof document !== "undefined" && !document.hidden) {
+        fetchLiveSettings();
+      }
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [fetchLiveSettings]);
+
+  const maxPartyLimit = liveSettings?.maxPartySize ?? 12;
+  const advanceDays = liveSettings?.advanceBookingDays ?? 30;
+  const isDineInActive = liveSettings?.dineInEnabled ?? true;
+
+  const partySizeOptions: number[] = useMemo(() => {
+    const list: number[] = [];
+    const max = Math.max(1, maxPartyLimit);
+    for (let i = 1; i <= Math.min(max, 8); i++) {
+      list.push(i);
+    }
+    if (max >= 10 && !list.includes(10)) list.push(10);
+    if (max >= 12 && !list.includes(12)) list.push(12);
+    if (max > 12) {
+      for (let i = 14; i <= max; i += 2) {
+        if (!list.includes(i)) list.push(i);
+      }
+      if (!list.includes(max)) list.push(max);
+    }
+    return list.sort((a, b) => a - b);
+  }, [maxPartyLimit]);
+
+  const maxBookingDate = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + advanceDays);
+    return d.toISOString().split("T")[0];
+  }, [advanceDays]);
 
   const [date, setDate] = useState(defaultDateStr);
   const [timeSlot, setTimeSlot] = useState("19:30");
@@ -421,7 +489,7 @@ export function ReservationForm() {
               Number of Guests
             </label>
             <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-              {[1, 2, 3, 4, 5, 6, 7, 8, 10, 12].map((num) => (
+              {partySizeOptions.map((num) => (
                 <button
                   key={num}
                   type="button"
@@ -437,7 +505,7 @@ export function ReservationForm() {
               ))}
             </div>
             <p className="text-[11px] text-charcoal-700 mt-1">
-              Parties larger than 12 can be arranged via our events concierge.
+              Parties larger than {maxPartyLimit} can be arranged via our events concierge.
             </p>
           </div>
 
@@ -452,6 +520,7 @@ export function ReservationForm() {
                 type="date"
                 required
                 min={new Date().toISOString().split("T")[0]}
+                max={maxBookingDate}
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 className="w-full bg-ivory-50 border border-ivory-300 rounded-xl pl-10 pr-4 py-2.5 text-xs text-charcoal-900 focus:outline-none focus:border-terracotta-500 font-medium"
@@ -759,11 +828,13 @@ export function ReservationForm() {
       <div className="pt-2">
         <button
           type="submit"
-          disabled={submitting}
+          disabled={submitting || !isDineInActive}
           className="w-full bg-terracotta-600 hover:bg-terracotta-700 text-ivory-50 py-4 px-6 rounded-2xl font-bold uppercase tracking-wider text-xs flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg disabled:opacity-50"
         >
           {submitting ? (
             <span>Verifying Table Capacity &amp; Booking...</span>
+          ) : !isDineInActive ? (
+            <span>Table Reservations Temporarily Paused</span>
           ) : (
             <>
               <span>Request Table Reservation for {formatTo12Hour(timeSlot)}</span>

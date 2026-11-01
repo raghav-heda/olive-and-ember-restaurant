@@ -39,6 +39,7 @@ export default async function AdminSettingsPage() {
     dineInEnabled: restaurant.settings.dineInEnabled,
     pickupEnabled: restaurant.settings.pickupEnabled,
     deliveryEnabled: restaurant.settings.deliveryEnabled,
+    openingHoursJson: restaurant.settings.openingHoursJson,
   };
 
   return (

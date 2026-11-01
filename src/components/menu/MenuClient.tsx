@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { FoodImage } from "@/components/ui/FoodImage";
 import { formatCurrency } from "@/lib/utils";
@@ -65,13 +65,41 @@ interface CategoryData {
 }
 
 export function MenuClient({
-  categories,
-  menuItems,
+  categories: initialCategories,
+  menuItems: initialMenuItems,
 }: {
   categories: CategoryData[];
   menuItems: MenuItemData[];
 }) {
   const { addItem } = useCart();
+
+  const [categories, setCategories] = useState<CategoryData[]>(initialCategories);
+  const [items, setItems] = useState<MenuItemData[]>(initialMenuItems);
+
+  const fetchLiveMenu = useCallback(async () => {
+    try {
+      const res = await fetch("/api/menu", { cache: "no-store" });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.success && Array.isArray(data.menuItems)) {
+        setItems(data.menuItems);
+        if (Array.isArray(data.categories)) {
+          setCategories(data.categories);
+        }
+      }
+    } catch {
+      // background polling fallback
+    }
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (typeof document !== "undefined" && !document.hidden) {
+        fetchLiveMenu();
+      }
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [fetchLiveMenu]);
 
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -89,7 +117,7 @@ export function MenuClient({
 
   // Filter and sort items
   const filteredItems = useMemo(() => {
-    return menuItems
+    return items
       .filter((item) => {
         // Category filter
         if (selectedCategory !== "all" && item.category.slug !== selectedCategory) {
@@ -121,7 +149,7 @@ export function MenuClient({
         if (!a.isFeatured && b.isFeatured) return 1;
         return a.displayOrder - b.displayOrder;
       });
-  }, [menuItems, selectedCategory, dietaryFilter, searchQuery, sortBy]);
+  }, [items, selectedCategory, dietaryFilter, searchQuery, sortBy]);
 
   // Open customization modal
   const handleOpenItem = (item: MenuItemData) => {
@@ -321,10 +349,10 @@ export function MenuClient({
                 : "bg-ivory-50 text-charcoal-700 hover:bg-ivory-200 border border-ivory-300"
             }`}
           >
-            All Courses ({menuItems.length})
+            All Courses ({items.length})
           </button>
           {categories.map((cat) => {
-            const count = menuItems.filter((i) => i.category.slug === cat.slug).length;
+            const count = items.filter((i) => i.category.slug === cat.slug).length;
             const isSelected = selectedCategory === cat.slug;
             return (
               <button

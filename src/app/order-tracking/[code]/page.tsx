@@ -64,7 +64,9 @@ export default function OrderTrackingPage({ params }: { params: { code: string }
   const fetchStatus = async () => {
     try {
       setIsRefreshing(true);
-      const res = await fetch(`/api/orders/status?code=${code}`);
+      const res = await fetch(`/api/orders/status?code=${encodeURIComponent(code)}`, {
+        cache: "no-store",
+      });
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error || "Order not found");
@@ -79,12 +81,15 @@ export default function OrderTrackingPage({ params }: { params: { code: string }
     }
   };
 
+  const orderStatus = order?.status;
+
   useEffect(() => {
     let isMounted = true;
     const loadStatus = async () => {
       try {
-        setIsRefreshing(true);
-        const res = await fetch(`/api/orders/status?code=${code}`);
+        const res = await fetch(`/api/orders/status?code=${encodeURIComponent(code)}`, {
+          cache: "no-store",
+        });
         const data = await res.json();
         if (!isMounted) return;
         if (!res.ok) {
@@ -103,12 +108,14 @@ export default function OrderTrackingPage({ params }: { params: { code: string }
     };
 
     loadStatus();
-    const interval = setInterval(loadStatus, 15000);
+    // Live update every 3 seconds while order is active, or every 15s if completed
+    const intervalTime = orderStatus && ["COMPLETED", "CANCELLED"].includes(orderStatus) ? 15000 : 3000;
+    const interval = setInterval(loadStatus, intervalTime);
     return () => {
       isMounted = false;
       clearInterval(interval);
     };
-  }, [code]);
+  }, [code, orderStatus]);
 
   if (loading) {
     return (

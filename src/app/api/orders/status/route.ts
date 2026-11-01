@@ -28,37 +28,44 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    return NextResponse.json({
-      order: {
-        publicCode: order.publicCode,
-        customerName: order.customerName,
-        fulfilmentType: order.fulfilmentType,
-        deliveryAddress: order.deliveryAddress,
-        tableNumber: order.tableNumber,
-        status: order.status,
-        paymentStatus: order.paymentStatus,
-        paymentMethod: order.paymentMethod,
-        subtotal: order.subtotal,
-        discountTotal: order.discountTotal,
-        taxTotal: order.taxTotal,
-        deliveryFee: order.deliveryFee,
-        finalTotal: order.finalTotal,
-        couponCode: order.couponCode,
-        createdAt: order.createdAt,
-        items: order.items.map((item) => ({
-          name: item.itemNameSnapshot,
-          unitPrice: item.unitPriceSnapshot,
-          quantity: item.quantity,
-          itemTotal: item.itemTotalSnapshot,
-          specialInstructions: item.specialInstructions,
-          options: item.options.map((opt) => ({
-            optionName: opt.optionNameSnapshot,
-            valueName: opt.valueNameSnapshot,
-            priceModifier: opt.priceModifierSnapshot,
+    return NextResponse.json(
+      {
+        order: {
+          publicCode: order.publicCode,
+          customerName: order.customerName,
+          fulfilmentType: order.fulfilmentType,
+          deliveryAddress: order.deliveryAddress,
+          tableNumber: order.tableNumber,
+          status: order.status,
+          paymentStatus: order.paymentStatus,
+          paymentMethod: order.paymentMethod,
+          subtotal: order.subtotal,
+          discountTotal: order.discountTotal,
+          taxTotal: order.taxTotal,
+          deliveryFee: order.deliveryFee,
+          finalTotal: order.finalTotal,
+          couponCode: order.couponCode,
+          createdAt: order.createdAt,
+          items: order.items.map((item) => ({
+            name: item.itemNameSnapshot,
+            unitPrice: item.unitPriceSnapshot,
+            quantity: item.quantity,
+            itemTotal: item.itemTotalSnapshot,
+            specialInstructions: item.specialInstructions,
+            options: item.options.map((opt) => ({
+              optionName: opt.optionNameSnapshot,
+              valueName: opt.valueNameSnapshot,
+              priceModifier: opt.priceModifierSnapshot,
+            })),
           })),
-        })),
+        },
       },
-    });
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        },
+      }
+    );
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
 import {
   Search,
@@ -67,6 +67,40 @@ export function OrdersManagerClient({ initialOrders }: { initialOrders: AdminOrd
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [cancelModalOrder, setCancelModalOrder] = useState<AdminOrder | null>(null);
   const [cancelReason, setCancelReason] = useState("");
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Real-time synchronization with production database
+  const fetchLiveOrders = useCallback(async (isSilent = false) => {
+    if (!isSilent) setIsRefreshing(true);
+    try {
+      const res = await fetch("/api/admin/orders", {
+        cache: "no-store",
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.success && Array.isArray(data.orders)) {
+        setOrders(data.orders);
+        if (selectedOrder) {
+          const freshSelected = data.orders.find((o: AdminOrder) => o.id === selectedOrder.id);
+          if (freshSelected) setSelectedOrder(freshSelected);
+        }
+      }
+    } catch {
+      // background polling silent fallback
+    } finally {
+      if (!isSilent) setIsRefreshing(false);
+    }
+  }, [selectedOrder]);
+
+  // Poll database every 4 seconds when page is visible
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (typeof document !== "undefined" && !document.hidden) {
+        fetchLiveOrders(true);
+      }
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [fetchLiveOrders]);
 
   const filteredOrders = orders.filter((o) => {
     if (statusFilter !== "ALL" && o.status !== statusFilter) return false;
@@ -100,6 +134,7 @@ export function OrdersManagerClient({ initialOrders }: { initialOrders: AdminOrd
       if (selectedOrder && selectedOrder.id === orderId) {
         setSelectedOrder((prev) => (prev ? { ...prev, status: newStatus } : null));
       }
+      fetchLiveOrders(true);
     } catch (err: any) {
       alert(err.message || "Failed to update status");
     } finally {
@@ -124,6 +159,7 @@ export function OrdersManagerClient({ initialOrders }: { initialOrders: AdminOrd
       if (selectedOrder && selectedOrder.id === orderId) {
         setSelectedOrder((prev) => (prev ? { ...prev, paymentStatus: newPaymentStatus } : null));
       }
+      fetchLiveOrders(true);
     } catch (err: any) {
       alert(err.message);
     } finally {
@@ -156,6 +192,7 @@ export function OrdersManagerClient({ initialOrders }: { initialOrders: AdminOrd
       );
       setCancelModalOrder(null);
       setCancelReason("");
+      fetchLiveOrders(true);
     } catch (err: any) {
       alert(err.message);
     } finally {
@@ -180,6 +217,24 @@ export function OrdersManagerClient({ initialOrders }: { initialOrders: AdminOrd
           </div>
 
           <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+            {/* Live Sync Status Pill */}
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-950/80 border border-emerald-800 text-[10px] font-mono text-emerald-400 font-bold uppercase tracking-wider shadow-sm">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span>Live Sync 4s</span>
+              </span>
+
+              <button
+                type="button"
+                onClick={() => fetchLiveOrders(false)}
+                disabled={isRefreshing}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-charcoal-950 hover:bg-charcoal-800 border border-charcoal-700 text-xs text-ivory-200 transition-colors shadow-sm"
+                title="Immediately refresh kitchen tickets from database"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin text-terracotta-400" : ""}`} />
+                <span className="hidden sm:inline">Refresh</span>
+              </button>
+            </div>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}

@@ -18,10 +18,43 @@ export interface RestaurantSettingsData {
   dineInEnabled: boolean;
   pickupEnabled: boolean;
   deliveryEnabled: boolean;
+  openingHoursJson?: string;
 }
 
 export function SettingsManagerClient({ initialData }: { initialData: RestaurantSettingsData }) {
   const [formData, setFormData] = useState(initialData);
+
+  // Parse initial opening hours
+  let initialHours: any = {
+    monThuOpen: "12:00",
+    monThuClose: "23:00",
+    friSatOpen: "12:00",
+    friSatClose: "23:45",
+    sunOpen: "12:00",
+    sunClose: "22:30",
+  };
+
+  if (initialData.openingHoursJson) {
+    try {
+      const parsed = JSON.parse(initialData.openingHoursJson);
+      if (parsed.monday) {
+        initialHours.monThuOpen = parsed.monday.open || "12:00";
+        initialHours.monThuClose = parsed.monday.close || "23:00";
+      }
+      if (parsed.friday) {
+        initialHours.friSatOpen = parsed.friday.open || "12:00";
+        initialHours.friSatClose = parsed.friday.close || "23:45";
+      }
+      if (parsed.sunday) {
+        initialHours.sunOpen = parsed.sunday.open || "12:00";
+        initialHours.sunClose = parsed.sunday.close || "22:30";
+      }
+    } catch {
+      // default
+    }
+  }
+
+  const [hoursState, setHoursState] = useState(initialHours);
   const [saving, setSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,11 +63,26 @@ export function SettingsManagerClient({ initialData }: { initialData: Restaurant
     e.preventDefault();
     setSaving(true);
     setError(null);
+
+    // Build serialized openingHoursJson
+    const openingHoursJson = JSON.stringify({
+      monday: { open: hoursState.monThuOpen, close: hoursState.monThuClose, closed: false },
+      tuesday: { open: hoursState.monThuOpen, close: hoursState.monThuClose, closed: false },
+      wednesday: { open: hoursState.monThuOpen, close: hoursState.monThuClose, closed: false },
+      thursday: { open: hoursState.monThuOpen, close: hoursState.monThuClose, closed: false },
+      friday: { open: hoursState.friSatOpen, close: hoursState.friSatClose, closed: false },
+      saturday: { open: hoursState.friSatOpen, close: hoursState.friSatClose, closed: false },
+      sunday: { open: hoursState.sunOpen, close: hoursState.sunClose, closed: false },
+    });
+
     try {
       const res = await fetch("/api/admin/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          openingHoursJson,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -291,6 +339,99 @@ export function SettingsManagerClient({ initialData }: { initialData: Restaurant
                 Instant Auto-Confirm Table Bookings
               </span>
             </label>
+          </div>
+        </div>
+      </div>
+
+      {/* 4. Service Hours & Operating Timings */}
+      <div className="bg-charcoal-900 border border-charcoal-800 rounded-3xl p-6 sm:p-8 space-y-4 shadow-sm">
+        <h2 className="font-serif text-lg font-bold text-ivory-50">
+          Hearth Service Hours &amp; Operating Timings
+        </h2>
+        <p className="text-[11px] text-ivory-400">
+          Controls the live table reservation slots and booking availability shown on the customer site.
+        </p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-2">
+          {/* Mon - Thu */}
+          <div className="p-4 bg-charcoal-950 border border-charcoal-800 rounded-2xl space-y-3">
+            <span className="font-bold text-ivory-200 block text-xs">Monday &ndash; Thursday</span>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-[10px] text-ivory-400 uppercase font-bold mb-1">Open</label>
+                <input
+                  type="text"
+                  value={hoursState.monThuOpen}
+                  onChange={(e) => setHoursState({ ...hoursState, monThuOpen: e.target.value })}
+                  className="w-full bg-charcoal-900 border border-charcoal-700 rounded-lg px-2.5 py-1.5 text-xs text-ivory-100 font-mono focus:outline-none focus:border-terracotta-500"
+                  placeholder="12:00"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] text-ivory-400 uppercase font-bold mb-1">Close</label>
+                <input
+                  type="text"
+                  value={hoursState.monThuClose}
+                  onChange={(e) => setHoursState({ ...hoursState, monThuClose: e.target.value })}
+                  className="w-full bg-charcoal-900 border border-charcoal-700 rounded-lg px-2.5 py-1.5 text-xs text-ivory-100 font-mono focus:outline-none focus:border-terracotta-500"
+                  placeholder="23:00"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Fri - Sat */}
+          <div className="p-4 bg-charcoal-950 border border-charcoal-800 rounded-2xl space-y-3">
+            <span className="font-bold text-ivory-200 block text-xs">Friday &ndash; Saturday</span>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-[10px] text-ivory-400 uppercase font-bold mb-1">Open</label>
+                <input
+                  type="text"
+                  value={hoursState.friSatOpen}
+                  onChange={(e) => setHoursState({ ...hoursState, friSatOpen: e.target.value })}
+                  className="w-full bg-charcoal-900 border border-charcoal-700 rounded-lg px-2.5 py-1.5 text-xs text-ivory-100 font-mono focus:outline-none focus:border-terracotta-500"
+                  placeholder="12:00"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] text-ivory-400 uppercase font-bold mb-1">Close</label>
+                <input
+                  type="text"
+                  value={hoursState.friSatClose}
+                  onChange={(e) => setHoursState({ ...hoursState, friSatClose: e.target.value })}
+                  className="w-full bg-charcoal-900 border border-charcoal-700 rounded-lg px-2.5 py-1.5 text-xs text-ivory-100 font-mono focus:outline-none focus:border-terracotta-500"
+                  placeholder="23:45"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Sunday */}
+          <div className="p-4 bg-charcoal-950 border border-charcoal-800 rounded-2xl space-y-3">
+            <span className="font-bold text-ivory-200 block text-xs">Sunday Hearth</span>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-[10px] text-ivory-400 uppercase font-bold mb-1">Open</label>
+                <input
+                  type="text"
+                  value={hoursState.sunOpen}
+                  onChange={(e) => setHoursState({ ...hoursState, sunOpen: e.target.value })}
+                  className="w-full bg-charcoal-900 border border-charcoal-700 rounded-lg px-2.5 py-1.5 text-xs text-ivory-100 font-mono focus:outline-none focus:border-terracotta-500"
+                  placeholder="12:00"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] text-ivory-400 uppercase font-bold mb-1">Close</label>
+                <input
+                  type="text"
+                  value={hoursState.sunClose}
+                  onChange={(e) => setHoursState({ ...hoursState, sunClose: e.target.value })}
+                  className="w-full bg-charcoal-900 border border-charcoal-700 rounded-lg px-2.5 py-1.5 text-xs text-ivory-100 font-mono focus:outline-none focus:border-terracotta-500"
+                  placeholder="22:30"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>

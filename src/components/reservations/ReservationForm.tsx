@@ -342,7 +342,7 @@ export function ReservationForm() {
               type="text"
               value={lookupRef}
               onChange={(e) => setLookupRef(e.target.value.toUpperCase())}
-              placeholder="e.g. OE-9482"
+              placeholder="e.g. RES-7121"
               className="flex-1 bg-ivory-50 border border-ivory-300 rounded-xl px-4 py-2.5 text-xs text-charcoal-900 font-mono uppercase focus:outline-none focus:border-terracotta-500"
             />
             <button
@@ -357,6 +357,14 @@ export function ReservationForm() {
               Track
             </button>
           </div>
+          {lookupRef.startsWith("OE-") && (
+            <p className="text-[11px] text-terracotta-700 font-medium pt-1">
+              Note: <strong>{lookupRef}</strong> looks like an online food order.{" "}
+              <Link href={`/order-tracking/${encodeURIComponent(lookupRef.trim())}`} className="underline font-bold hover:text-terracotta-900">
+                Go to Order Tracking →
+              </Link>
+            </p>
+          )}
         </div>
       )}
 

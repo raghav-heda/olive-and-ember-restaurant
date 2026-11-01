@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { formatDateTime } from "@/lib/utils";
 import {
   Calendar,
@@ -12,6 +12,7 @@ import {
   XCircle,
   AlertCircle,
   UtensilsCrossed,
+  RefreshCw,
 } from "lucide-react";
 
 export interface AdminReservation {
@@ -42,6 +43,38 @@ export function ReservationsManagerClient({
   const [tableInput, setTableInput] = useState("");
   const [notesInput, setNotesInput] = useState("");
   const [updating, setUpdating] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastSyncedAt, setLastSyncedAt] = useState<Date>(new Date());
+
+  // Real-time synchronization with production database
+  const fetchLiveReservations = useCallback(async (isSilent = false) => {
+    if (!isSilent) setIsRefreshing(true);
+    try {
+      const res = await fetch("/api/admin/reservations", {
+        cache: "no-store",
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.success && Array.isArray(data.reservations)) {
+        setReservations(data.reservations);
+        setLastSyncedAt(new Date());
+      }
+    } catch {
+      // background polling silent fallback
+    } finally {
+      if (!isSilent) setIsRefreshing(false);
+    }
+  }, []);
+
+  // Poll database every 4 seconds when page is visible
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (typeof document !== "undefined" && !document.hidden) {
+        fetchLiveReservations(true);
+      }
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [fetchLiveReservations]);
 
   const filtered = reservations.filter((r) => {
     if (statusFilter !== "ALL" && r.status !== statusFilter) return false;
@@ -96,6 +129,9 @@ export function ReservationsManagerClient({
             : null
         );
       }
+
+      // Re-sync with database to ensure perfect consistency
+      fetchLiveReservations(true);
     } catch (err: any) {
       alert(err.message || "Failed to update reservation");
     } finally {
@@ -124,7 +160,26 @@ export function ReservationsManagerClient({
           />
         </div>
 
-        <div className="flex items-center gap-3 w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+          {/* Live Sync Status Pill */}
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-950/80 border border-emerald-800 text-[10px] font-mono text-emerald-400 font-bold uppercase tracking-wider shadow-sm">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span>Live Sync 4s</span>
+            </span>
+
+            <button
+              type="button"
+              onClick={() => fetchLiveReservations(false)}
+              disabled={isRefreshing}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-charcoal-950 hover:bg-charcoal-800 border border-charcoal-700 text-xs text-ivory-200 transition-colors shadow-sm"
+              title="Immediately refresh table bookings from database"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin text-terracotta-400" : ""}`} />
+              <span className="hidden sm:inline">Refresh</span>
+            </button>
+          </div>
+
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}

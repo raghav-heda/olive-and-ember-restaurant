@@ -74,12 +74,12 @@ export default function ReservationTrackingPage({
     fetchStatus();
   }, [fetchStatus]);
 
-  // Auto-refresh every 10 seconds while booking is PENDING to catch admin approval
+  // Auto-refresh every 3.5 seconds while booking is PENDING to catch admin approval
   useEffect(() => {
     if (!reservation || reservation.status !== "PENDING") return;
     const interval = setInterval(() => {
       fetchStatus(true);
-    }, 10000);
+    }, 3500);
     return () => clearInterval(interval);
   }, [reservation, fetchStatus]);
 
@@ -105,20 +105,35 @@ export default function ReservationTrackingPage({
           </div>
           <div className="space-y-2">
             <h1 className="font-serif text-2xl text-charcoal-900 font-bold">
-              Reservation Not Found
+              {ref.toUpperCase().startsWith("OE-") ? "Looking for an Order?" : "Reservation Not Found"}
             </h1>
             <p className="text-xs text-charcoal-700 leading-relaxed">
-              {error || `We could not find an active reservation for reference #${ref}.`}
+              {ref.toUpperCase().startsWith("OE-") ? (
+                <>
+                  Reference <strong>#{ref}</strong> is formatted as an online food order rather than a table reservation.
+                </>
+              ) : (
+                error || `We could not find an active reservation for reference #${ref}.`
+              )}
             </p>
           </div>
           <div className="pt-2 flex flex-col gap-3">
-            <button
-              onClick={() => fetchStatus()}
-              className="w-full flex items-center justify-center gap-2 bg-charcoal-900 hover:bg-terracotta-600 text-ivory-50 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors shadow"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              <span>Retry Lookup</span>
-            </button>
+            {ref.toUpperCase().startsWith("OE-") ? (
+              <Link
+                href={`/order-tracking/${encodeURIComponent(ref)}`}
+                className="w-full flex items-center justify-center gap-2 bg-charcoal-900 hover:bg-terracotta-600 text-ivory-50 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors shadow"
+              >
+                <span>Track Food Order #{ref} →</span>
+              </Link>
+            ) : (
+              <button
+                onClick={() => fetchStatus()}
+                className="w-full flex items-center justify-center gap-2 bg-charcoal-900 hover:bg-terracotta-600 text-ivory-50 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors shadow"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>Retry Lookup</span>
+              </button>
+            )}
             <Link
               href="/reservations"
               className="w-full text-center text-xs font-semibold text-terracotta-700 hover:text-terracotta-800 py-1"

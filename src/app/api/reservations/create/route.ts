@@ -89,53 +89,60 @@ export async function POST(req: Request) {
       },
     });
 
-    // Dispatch notifications (email / whatsapp / console)
-    await sendReservationNotification({
-      bookingRef: reservation.bookingRef,
-      customerName: reservation.customerName,
-      customerPhone: reservation.customerPhone,
-      customerEmail: reservation.customerEmail,
-      guestCount: reservation.guestCount,
-      reservationDate: reservation.reservationDate,
-      timeSlot: reservation.timeSlot,
-      status: reservation.status,
-    });
+    // Dispatch notifications and record activity log asynchronously without blocking client response
+    Promise.allSettled([
+      sendReservationNotification({
+        bookingRef: reservation.bookingRef,
+        customerName: reservation.customerName,
+        customerPhone: reservation.customerPhone,
+        customerEmail: reservation.customerEmail,
+        guestCount: reservation.guestCount,
+        reservationDate: reservation.reservationDate,
+        timeSlot: reservation.timeSlot,
+        status: reservation.status,
+      }),
+      prisma.activityLog.create({
+        data: {
+          restaurantId: restaurant.id,
+          action: "RESERVATION_REQUESTED",
+          entityType: "RESERVATION",
+          entityId: reservation.id,
+          detailsJson: JSON.stringify({
+            bookingRef: reservation.bookingRef,
+            customerName: reservation.customerName,
+            guestCount: reservation.guestCount,
+            date: reservation.reservationDate,
+            time: reservation.timeSlot,
+            status: reservation.status,
+          }),
+        },
+      }),
+    ]).catch((err) => console.error("Background task error:", err));
 
-    // Record activity log
-    await prisma.activityLog.create({
-      data: {
-        restaurantId: restaurant.id,
-        action: "RESERVATION_REQUESTED",
-        entityType: "RESERVATION",
-        entityId: reservation.id,
-        detailsJson: JSON.stringify({
+    return NextResponse.json(
+      {
+        success: true,
+        bookingRef: reservation.bookingRef,
+        status: reservation.status,
+        message:
+          reservation.status === "CONFIRMED"
+            ? "Your table reservation is confirmed."
+            : "Your reservation request has been received and is pending staff confirmation.",
+        reservation: {
           bookingRef: reservation.bookingRef,
           customerName: reservation.customerName,
           guestCount: reservation.guestCount,
           date: reservation.reservationDate,
           time: reservation.timeSlot,
           status: reservation.status,
-        }),
+        },
       },
-    });
-
-    return NextResponse.json({
-      success: true,
-      bookingRef: reservation.bookingRef,
-      status: reservation.status,
-      message:
-        reservation.status === "CONFIRMED"
-          ? "Your table reservation is confirmed."
-          : "Your reservation request has been received and is pending staff confirmation.",
-      reservation: {
-        bookingRef: reservation.bookingRef,
-        customerName: reservation.customerName,
-        guestCount: reservation.guestCount,
-        date: reservation.reservationDate,
-        time: reservation.timeSlot,
-        status: reservation.status,
-      },
-    });
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate",
+        },
+      }
+    );
   } catch (error: any) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

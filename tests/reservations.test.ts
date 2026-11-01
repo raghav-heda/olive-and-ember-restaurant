@@ -4,6 +4,7 @@ import { checkReservationAvailability, DEFAULT_TIME_SLOTS } from "@/lib/availabi
 
 describe("Reservation Capacity & Availability Engine", () => {
   let restaurantId: string;
+  const createdReservationIds: string[] = [];
 
   beforeAll(async () => {
     const restaurant = await prisma.restaurant.findFirst();
@@ -12,6 +13,11 @@ describe("Reservation Capacity & Availability Engine", () => {
   });
 
   afterAll(async () => {
+    if (createdReservationIds.length > 0) {
+      await prisma.reservation.deleteMany({
+        where: { id: { in: createdReservationIds } },
+      });
+    }
     await prisma.$disconnect();
   });
 
@@ -155,6 +161,7 @@ describe("Reservation Capacity & Availability Engine", () => {
         status: "PENDING",
       },
     });
+    createdReservationIds.push(created.id);
 
     expect(created.id).toBeDefined();
     expect(created.bookingRef).toBe(testRef);
@@ -175,7 +182,7 @@ describe("Reservation Capacity & Availability Engine", () => {
   it("fails and throws an error when attempting to insert a reservation with a duplicate bookingRef", async () => {
     const duplicateRef = `RES-DUP-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
-    await prisma.reservation.create({
+    const initialBooking = await prisma.reservation.create({
       data: {
         bookingRef: duplicateRef,
         restaurantId,
@@ -187,6 +194,7 @@ describe("Reservation Capacity & Availability Engine", () => {
         status: "CONFIRMED",
       },
     });
+    createdReservationIds.push(initialBooking.id);
 
     // Attempting to insert identical bookingRef must throw a unique constraint error
     await expect(

@@ -22,7 +22,7 @@ const updateReservationSchema = z.object({
 
 export async function POST(req: Request) {
   try {
-    const session = await requireAuth();
+    const session = await requireAuth(["ADMIN", "OWNER", "STAFF"], req);
     const body = await req.json();
     const validated = updateReservationSchema.parse(body);
 

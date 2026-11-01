@@ -39,12 +39,40 @@ export function verifySessionToken(token: string): SessionPayload | null {
   }
 }
 
-export async function getCurrentSession(): Promise<SessionPayload | null> {
+export async function getCurrentSession(req?: Request): Promise<SessionPayload | null> {
   try {
-    const cookieStore = cookies();
-    const token = cookieStore.get(COOKIE_NAME)?.value;
-    if (!token) return null;
-    return verifySessionToken(token);
+    // 1. Try reading from Next.js cookieStore
+    try {
+      const cookieStore = cookies();
+      const token = cookieStore.get(COOKIE_NAME)?.value;
+      if (token) {
+        const payload = verifySessionToken(token);
+        if (payload) return payload;
+      }
+    } catch {
+      // In non-server-action or test contexts, Next.js cookies() throws or is unavailable
+    }
+
+    // 2. Fallback to request headers if req is provided
+    if (req) {
+      const cookieHeader = req.headers.get("cookie");
+      if (cookieHeader) {
+        const match = cookieHeader.match(new RegExp(`(?:^|; )${COOKIE_NAME}=([^;]*)`));
+        if (match && match[1]) {
+          const payload = verifySessionToken(decodeURIComponent(match[1]));
+          if (payload) return payload;
+        }
+      }
+
+      const authHeader = req.headers.get("authorization");
+      if (authHeader && authHeader.startsWith("Bearer ")) {
+        const token = authHeader.substring(7).trim();
+        const payload = verifySessionToken(token);
+        if (payload) return payload;
+      }
+    }
+
+    return null;
   } catch {
     return null;
   }
@@ -57,9 +85,10 @@ export async function getCurrentSession(): Promise<SessionPayload | null> {
  * "STAFF" permissions allow both operational staff and administrators.
  */
 export async function requireAuth(
-  allowedRoles: string[] = ["ADMIN", "OWNER", "STAFF"]
+  allowedRoles: string[] = ["ADMIN", "OWNER", "STAFF"],
+  req?: Request
 ): Promise<SessionPayload> {
-  const session = await getCurrentSession();
+  const session = await getCurrentSession(req);
   if (!session) {
     throw new Error("UNAUTHORIZED: Authentication required to access this resource");
   }

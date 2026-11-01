@@ -45,15 +45,39 @@ export async function POST(req: Request) {
       restaurantId: user.restaurantId,
     });
 
-    // Set secure HTTP-only cookie
-    const cookieStore = cookies();
-    cookieStore.set("oe_session", token, {
+    // Prepare response
+    const response = NextResponse.json({
+      success: true,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        restaurantName: user.restaurant.name,
+      },
+    });
+
+    // Set secure HTTP-only cookie on response
+    response.cookies.set("oe_session", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 60 * 60 * 24 * 7, // 7 days
       path: "/",
     });
+
+    try {
+      const cookieStore = cookies();
+      cookieStore.set("oe_session", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 7,
+        path: "/",
+      });
+    } catch {
+      // In testing environments outside Next.js request context
+    }
 
     // Record Staff Authentication Activity Log
     try {
@@ -76,16 +100,7 @@ export async function POST(req: Request) {
       console.error("Failed to write login activity log:", logErr);
     }
 
-    return NextResponse.json({
-      success: true,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        restaurantName: user.restaurant.name,
-      },
-    });
+    return response;
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message || "Failed to authenticate" },

@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { DEFAULT_TIME_SLOTS } from "@/lib/availability";
 import {
   Calendar as CalendarIcon,
@@ -16,6 +18,8 @@ import {
   Check,
   Sun,
   Moon,
+  RefreshCw,
+  Search,
 } from "lucide-react";
 
 // Convert 24-hour time "19:30" to user-friendly 12-hour format "7:30 PM"
@@ -68,6 +72,10 @@ export function ReservationForm() {
   const [specialRequests, setSpecialRequests] = useState("");
 
   const [submitting, setSubmitting] = useState(false);
+  const router = useRouter();
+  const [lookupRef, setLookupRef] = useState("");
+  const [showLookup, setShowLookup] = useState(false);
+  const [refreshingStatus, setRefreshingStatus] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [suggestedSlots, setSuggestedSlots] = useState<string[]>([]);
   const [successBooking, setSuccessBooking] = useState<{
@@ -79,6 +87,69 @@ export function ReservationForm() {
     guestCount: number;
     customerName: string;
   } | null>(null);
+
+  // Poll database for real-time status update while booking is PENDING
+  useEffect(() => {
+    if (!successBooking || successBooking.status !== "PENDING") return;
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/reservations/status?ref=${encodeURIComponent(successBooking.bookingRef)}`, {
+          cache: "no-store",
+        });
+        const data = await res.json();
+        if (res.ok && data.reservation) {
+          setSuccessBooking((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  status: data.reservation.status,
+                  message:
+                    data.reservation.status === "CONFIRMED"
+                      ? "Your table reservation is now confirmed by our staff!"
+                      : data.reservation.status === "CANCELLED"
+                      ? "This reservation request was cancelled."
+                      : prev.message,
+                }
+              : null
+          );
+        }
+      } catch {
+        // silent background polling
+      }
+    }, 8000);
+    return () => clearInterval(interval);
+  }, [successBooking]);
+
+  const handleManualRefresh = async () => {
+    if (!successBooking) return;
+    setRefreshingStatus(true);
+    try {
+      const res = await fetch(`/api/reservations/status?ref=${encodeURIComponent(successBooking.bookingRef)}`, {
+        cache: "no-store",
+      });
+      const data = await res.json();
+      if (res.ok && data.reservation) {
+        setSuccessBooking((prev) =>
+          prev
+            ? {
+                ...prev,
+                status: data.reservation.status,
+                message:
+                  data.reservation.status === "CONFIRMED"
+                    ? "Your table reservation is now confirmed by our staff!"
+                    : data.reservation.status === "CANCELLED"
+                    ? "This reservation request was cancelled."
+                    : prev.message,
+              }
+            : null
+        );
+      }
+    } catch {
+      // silent
+    } finally {
+      setRefreshingStatus(false);
+    }
+  };
 
   const handleSelectTime = (selected: string) => {
     setTimeSlot(selected);
@@ -169,39 +240,75 @@ export function ReservationForm() {
             <span className="text-charcoal-700">Party Size:</span>
             <span className="font-bold text-charcoal-900">{successBooking.guestCount} Guests</span>
           </div>
-          <div className="flex justify-between">
+          <div className="flex items-center justify-between">
             <span className="text-charcoal-700">Booking Status:</span>
-            <span
-              className={`font-bold uppercase tracking-wider text-[11px] px-2 py-0.5 rounded ${
-                successBooking.status === "CONFIRMED"
-                  ? "bg-emerald-100 text-emerald-800"
-                  : "bg-amber-100 text-amber-800"
-              }`}
-            >
-              {successBooking.status}
-            </span>
+            <div className="flex items-center gap-2">
+              <span
+                className={`font-bold uppercase tracking-wider text-[11px] px-2.5 py-0.5 rounded-lg border ${
+                  successBooking.status === "CONFIRMED"
+                    ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+                    : successBooking.status === "CANCELLED"
+                    ? "bg-red-100 text-red-800 border-red-300"
+                    : "bg-amber-100 text-amber-800 border-amber-300"
+                }`}
+              >
+                {successBooking.status}
+              </span>
+              <button
+                type="button"
+                onClick={handleManualRefresh}
+                disabled={refreshingStatus}
+                title="Refresh live status from database"
+                className="p-1 rounded-md text-charcoal-700 hover:text-terracotta-600 hover:bg-ivory-200 transition-colors"
+              >
+                <RefreshCw
+                  className={`w-3.5 h-3.5 ${
+                    refreshingStatus ? "animate-spin text-terracotta-600" : ""
+                  }`}
+                />
+              </button>
+            </div>
           </div>
         </div>
 
         <div className="text-xs text-charcoal-700 space-y-1">
-          <p>A confirmation notification has been dispatched to your contact phone.</p>
-          <p>Please arrive within 15 minutes of your confirmed seating slot ({successBooking.time}).</p>
+          {successBooking.status === "PENDING" && (
+            <p className="text-amber-800 font-medium">
+              Awaiting staff confirmation. This view automatically refreshes when approved.
+            </p>
+          )}
+          {successBooking.status === "CONFIRMED" && (
+            <p className="text-emerald-800 font-medium">
+              Your table is confirmed. Please arrive within 15 minutes of your reserved time ({successBooking.time}).
+            </p>
+          )}
+          <p>A notification summary has also been dispatched to your contact records.</p>
         </div>
 
-        <button
-          onClick={() => {
-            setSuccessBooking(null);
-            setName("");
-            setPhone("");
-            setEmail("");
-            setSpecialRequests("");
-            setTimeSlot("19:30");
-            setIsCustomMode(false);
-          }}
-          className="inline-flex items-center gap-2 bg-charcoal-900 hover:bg-terracotta-600 text-ivory-50 px-6 py-3 rounded-full text-xs font-bold uppercase tracking-wider transition-colors shadow"
-        >
-          <span>Book Another Reservation</span>
-        </button>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+          <Link
+            href={`/reservations/tracking/${encodeURIComponent(successBooking.bookingRef)}`}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-charcoal-900 hover:bg-terracotta-600 text-ivory-50 px-6 py-3 rounded-full text-xs font-bold uppercase tracking-wider transition-colors shadow"
+          >
+            <span>Live Tracking Page &rarr;</span>
+          </Link>
+
+          <button
+            type="button"
+            onClick={() => {
+              setSuccessBooking(null);
+              setName("");
+              setPhone("");
+              setEmail("");
+              setSpecialRequests("");
+              setTimeSlot("19:30");
+              setIsCustomMode(false);
+            }}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-ivory-50 hover:bg-ivory-200 text-charcoal-900 border border-ivory-300 px-6 py-3 rounded-full text-xs font-bold uppercase tracking-wider transition-colors"
+          >
+            <span>Book Another Table</span>
+          </button>
+        </div>
       </div>
     );
   }
@@ -209,10 +316,54 @@ export function ReservationForm() {
   const isCustomSelected = !DEFAULT_TIME_SLOTS.includes(timeSlot);
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-ivory-100 border border-ivory-300 rounded-3xl p-6 sm:p-10 shadow-lg space-y-8"
-    >
+    <div className="space-y-4">
+      {/* Existing Reservation Quick Lookup */}
+      <div className="flex items-center justify-between bg-ivory-100 border border-ivory-300 rounded-2xl px-5 py-3 text-xs">
+        <div className="flex items-center gap-2 text-charcoal-800">
+          <Clock className="w-4 h-4 text-terracotta-600 shrink-0" />
+          <span className="font-medium">Have an existing table booking?</span>
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowLookup(!showLookup)}
+          className="text-terracotta-600 hover:text-terracotta-700 font-bold underline transition-colors"
+        >
+          {showLookup ? "Hide Lookup" : "Check Booking Status"}
+        </button>
+      </div>
+
+      {showLookup && (
+        <div className="bg-ivory-100 border border-ivory-300 rounded-2xl p-4 sm:p-5 space-y-2 animate-in slide-in-from-top-2 duration-200 shadow-sm">
+          <label className="block text-[11px] font-bold text-charcoal-900 uppercase tracking-wider">
+            Enter Booking Reference
+          </label>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={lookupRef}
+              onChange={(e) => setLookupRef(e.target.value.toUpperCase())}
+              placeholder="e.g. OE-9482"
+              className="flex-1 bg-ivory-50 border border-ivory-300 rounded-xl px-4 py-2.5 text-xs text-charcoal-900 font-mono uppercase focus:outline-none focus:border-terracotta-500"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                if (lookupRef.trim()) {
+                  router.push(`/reservations/tracking/${encodeURIComponent(lookupRef.trim())}`);
+                }
+              }}
+              className="bg-charcoal-900 hover:bg-terracotta-600 text-ivory-50 px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors shrink-0 shadow-sm"
+            >
+              Track
+            </button>
+          </div>
+        </div>
+      )}
+
+      <form
+        onSubmit={handleSubmit}
+        className="bg-ivory-100 border border-ivory-300 rounded-3xl p-6 sm:p-10 shadow-lg space-y-8"
+      >
       {errorMessage && (
         <div className="p-4 rounded-2xl bg-red-50 border border-red-200 flex flex-col gap-3 text-red-800 text-xs">
           <div className="flex items-start gap-3">
@@ -614,5 +765,6 @@ export function ReservationForm() {
         </button>
       </div>
     </form>
+  </div>
   );
 }

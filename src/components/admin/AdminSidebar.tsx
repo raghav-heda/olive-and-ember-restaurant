@@ -18,6 +18,7 @@ import {
   ExternalLink,
   Menu,
   X,
+  Mail,
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -45,6 +46,7 @@ export function AdminSidebar({
     { href: "/admin", label: "Overview & Metrics", icon: LayoutDashboard },
     { href: "/admin/orders", label: "Live Orders", icon: UtensilsCrossed },
     { href: "/admin/reservations", label: "Table Bookings", icon: Calendar },
+    { href: "/admin/inquiries", label: "Guest Inquiries", icon: Mail },
     { href: "/admin/menu", label: "Menu Viewing & Items", icon: BookOpen },
     { href: "/admin/qr-menu", label: "Table QR Menus", icon: QrCode },
     { href: "/admin/activity-logs", label: "Staff Activity Logs", icon: History },

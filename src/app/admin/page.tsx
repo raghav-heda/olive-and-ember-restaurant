@@ -15,6 +15,7 @@ import {
   QrCode,
   BookOpen,
   Sparkles,
+  Mail,
 } from "lucide-react";
 
 export const revalidate = 0; // Dynamic server component
@@ -26,10 +27,11 @@ export default async function AdminDashboardPage() {
   let reservations: any[] = [];
   let menuItems: any[] = [];
   let recentLogs: any[] = [];
+  let unreadInquiriesCount = 0;
   let queryError: string | null = null;
 
   try {
-    const [fetchedOrders, fetchedReservations, fetchedMenuItems, fetchedLogs] =
+    const [fetchedOrders, fetchedReservations, fetchedMenuItems, fetchedLogs, fetchedInquiries] =
       await Promise.all([
         prisma.order.findMany({
           where: { restaurantId: session.restaurantId },
@@ -48,12 +50,16 @@ export default async function AdminDashboardPage() {
           orderBy: { createdAt: "desc" },
           take: 6,
         }),
+        prisma.contactInquiry.count({
+          where: { isRead: false },
+        }),
       ]);
 
     orders = fetchedOrders;
     reservations = fetchedReservations;
     menuItems = fetchedMenuItems;
     recentLogs = fetchedLogs;
+    unreadInquiriesCount = fetchedInquiries;
   } catch (err: any) {
     console.error("Error fetching dashboard statistics:", err);
     queryError = err?.message || "Failed to load complete records from database.";
@@ -104,6 +110,16 @@ export default async function AdminDashboardPage() {
           >
             <UtensilsCrossed className="w-4 h-4" />
             <span>Manage Orders</span>
+          </Link>
+          <Link
+            href="/admin/inquiries"
+            className="bg-charcoal-800 hover:bg-charcoal-700 text-ivory-200 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors border border-charcoal-700 flex items-center gap-1.5"
+          >
+            <Mail className="w-4 h-4 text-terracotta-400" />
+            <span>Guest Notes</span>
+            {unreadInquiriesCount > 0 && (
+              <span className="w-2 h-2 rounded-full bg-amber-400" />
+            )}
           </Link>
           <Link
             href="/admin/qr-menu"
